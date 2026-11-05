@@ -1,0 +1,21 @@
+{
+  "name": "a2z-auto-parts-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A2Z Auto Parts API: accounts, enquiries, quotes, invoices and credit notes on MongoDB",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --env-file=.env --watch src/server.js",
+    "test": "node --test test/api.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.5.0",
+    "bcryptjs": "3.0.3",
+    "express": "5.3.0",
+    "express-rate-limit": "8.7.3",
+    "helmet": "8.3.0",
+    "mongodb": "7.8.0"
+  }
+}

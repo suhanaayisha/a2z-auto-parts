@@ -1,0 +1,39 @@
+# Render Blueprint: creates the API and the web app.
+# In Render: New + → Blueprint → pick this repo. See README.md for the full steps.
+services:
+  - type: web
+    name: a2z-auto-parts-api
+    runtime: node
+    rootDir: api
+    plan: free           # change to "starter" (paid) so it never sleeps; free sleeps after 15 min idle and takes ~1 min to wake
+    region: frankfurt    # keep in the same region as your MongoDB Atlas cluster
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false      # paste your MongoDB Atlas connection string when Render asks
+      - key: MONGODB_DB
+        value: partsdesk
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false      # optional: turns on "Read message into items". Leave empty to skip.
+
+  - type: web
+    name: a2z-auto-parts-web
+    runtime: node
+    rootDir: web
+    plan: free           # change to "starter" (paid) to stop it sleeping
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: API_URL
+        sync: false      # the API service's address, e.g. https://a2z-auto-parts-api.onrender.com

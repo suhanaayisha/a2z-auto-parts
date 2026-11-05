@@ -1,0 +1,19 @@
+{
+  "name": "a2z-auto-parts-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A2Z Auto Parts web app (Next.js)",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3000}"
+  },
+  "dependencies": {
+    "jspdf": "2.5.2",
+    "jspdf-autotable": "3.8.4",
+    "next": "16.4.5",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

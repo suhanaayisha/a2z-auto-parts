@@ -1,0 +1,973 @@
+{
+ "company": {
+  "name": "Your Company Name",
+  "address": "Dubai, United Arab Emirates",
+  "phone": "+971 5X XXX XXXX",
+  "email": "",
+  "licence": "",
+  "authority": "",
+  "payDays": 0,
+  "trn": "",
+  "vatRegistered": false,
+  "bank": "Bank name \u00b7 Account name \u00b7 IBAN (add in Settings)",
+  "quoteValidDays": 7,
+  "terms": "Used parts sold as inspected. Fitment warranty 7 days on engines and gearboxes only. Returns accepted within 3 days in original condition.",
+  "salespeople": [
+   {
+    "name": "Faisal",
+    "pct": 5
+   },
+   {
+    "name": "Joseph",
+    "pct": 5
+   }
+  ],
+  "sample": true
+ },
+ "customers": {
+  "c2": {
+   "address": "Industrial Area 6, Sharjah",
+   "contact": "Rashid",
+   "groups": "Star Garage Parts Req",
+   "name": "Sharjah Star Garage",
+   "notes": "Pays cash on delivery",
+   "phone": "+971 55 000 0002",
+   "sample": true,
+   "trn": ""
+  },
+  "c3": {
+   "address": "M-14, Musaffah, Abu Dhabi",
+   "contact": "Anil",
+   "groups": "Precision Motors x Parts",
+   "name": "Musaffah Precision Motors",
+   "notes": "",
+   "phone": "+971 52 000 0003",
+   "sample": true,
+   "trn": "100987654300003"
+  },
+  "c1": {
+   "address": "Al Quoz Industrial 3, Dubai",
+   "contact": "Imran",
+   "groups": "AQ Auto Care \u2013 Parts",
+   "name": "Al Quoz Auto Care Workshop",
+   "notes": "",
+   "phone": "+971 50 000 0001",
+   "sample": true,
+   "trn": "100345678900003"
+  }
+ },
+ "enquiries": {
+  "e5": {
+   "commAmt": 160,
+   "commPaid": false,
+   "confirmDate": "2026-10-31T12:00:00+04:00",
+   "createdAt": "2026-10-30T08:50:00+04:00",
+   "customerId": "c3",
+   "enqNo": 5,
+   "extraDisc": 0,
+   "items": [
+    {
+     "chosen": 0,
+     "delivered": true,
+     "deliveredDate": "2026-11-01T10:00:00+04:00",
+     "options": [
+      {
+       "cost": 450,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 750
+      }
+     ],
+     "part": "Rear bumper",
+     "qty": 1,
+     "vehicle": "Toyota Hilux 2020",
+     "k": "e5k0"
+    },
+    {
+     "chosen": 1,
+     "delivered": false,
+     "deliveredDate": null,
+     "options": [
+      {
+       "cost": 800,
+       "disc": 50,
+       "lead": 0,
+       "quality": "used",
+       "sell": 1250
+      },
+      {
+       "cost": 1900,
+       "disc": 0,
+       "lead": 7,
+       "quality": "original",
+       "sell": 2600
+      }
+     ],
+     "part": "Tailgate",
+     "qty": 1,
+     "vehicle": "Toyota Hilux 2020",
+     "k": "e5k1"
+    }
+   ],
+   "message": "Hilux 2020 rear bumper and tailgate",
+   "notes": "",
+   "photos": [],
+   "quoteDate": "2026-10-30T10:00:00+04:00",
+   "quoteNo": 5,
+   "quoteRev": 1,
+   "salesperson": "Joseph",
+   "sample": true,
+   "sender": "Anil",
+   "status": "invoiced"
+  },
+  "e6": {
+   "commAmt": 40,
+   "commPaid": false,
+   "confirmDate": null,
+   "createdAt": "2026-10-30T13:30:00+04:00",
+   "customerId": "c2",
+   "enqNo": 6,
+   "extraDisc": 0,
+   "items": [
+    {
+     "chosen": 0,
+     "delivered": false,
+     "deliveredDate": null,
+     "options": [
+      {
+       "cost": 220,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 380
+      },
+      {
+       "cost": 150,
+       "disc": 0,
+       "lead": 2,
+       "quality": "aftermarket",
+       "sell": 290
+      }
+     ],
+     "part": "Radiator",
+     "qty": 1,
+     "vehicle": "Mitsubishi Pajero 2014",
+     "k": "e6k0"
+    },
+    {
+     "chosen": 0,
+     "delivered": false,
+     "deliveredDate": null,
+     "options": [
+      {
+       "cost": 260,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 420
+      },
+      {
+       "cost": 520,
+       "disc": 0,
+       "lead": 7,
+       "quality": "original",
+       "sell": 780
+      }
+     ],
+     "part": "AC condenser",
+     "qty": 1,
+     "vehicle": "Mitsubishi Pajero 2014",
+     "k": "e6k1"
+    }
+   ],
+   "message": "pajero 2014 radiator and ac condenser",
+   "notes": "",
+   "photos": [],
+   "quoteDate": "2026-10-31T11:00:00+04:00",
+   "quoteNo": 6,
+   "quoteRev": 2,
+   "salesperson": "Faisal",
+   "sample": true,
+   "sender": "Rashid",
+   "status": "quoted"
+  },
+  "e2": {
+   "commAmt": 90,
+   "commPaid": false,
+   "confirmDate": "2026-10-28T11:00:00+04:00",
+   "createdAt": "2026-10-27T09:05:00+04:00",
+   "customerId": "c3",
+   "enqNo": 2,
+   "extraDisc": 50,
+   "items": [
+    {
+     "chosen": 0,
+     "delivered": true,
+     "deliveredDate": "2026-10-28T17:00:00+04:00",
+     "options": [
+      {
+       "cost": 900,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 1400
+      }
+     ],
+     "part": "Bonnet",
+     "qty": 1,
+     "vehicle": "Nissan Patrol 2018",
+     "k": "e2k0"
+    },
+    {
+     "chosen": 1,
+     "delivered": false,
+     "deliveredDate": null,
+     "options": [
+      {
+       "cost": 350,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 600
+      },
+      {
+       "cost": 180,
+       "disc": 0,
+       "lead": 5,
+       "quality": "aftermarket",
+       "sell": 380
+      }
+     ],
+     "part": "Fender LH",
+     "qty": 1,
+     "vehicle": "Nissan Patrol 2018",
+     "k": "e2k1"
+    }
+   ],
+   "message": "Patrol 2018 bonnet and LH fender",
+   "notes": "Fender coming from Sharjah yard",
+   "photos": [],
+   "quoteDate": "2026-10-27T10:10:00+04:00",
+   "quoteNo": 2,
+   "quoteRev": 1,
+   "salesperson": "Joseph",
+   "sample": true,
+   "sender": "Anil",
+   "status": "invoiced"
+  },
+  "e1": {
+   "commAmt": 60,
+   "commPaid": true,
+   "confirmDate": "2026-09-23T15:00:00+04:00",
+   "createdAt": "2026-09-23T10:20:00+04:00",
+   "customerId": "c1",
+   "enqNo": 1,
+   "extraDisc": 0,
+   "items": [
+    {
+     "chosen": 0,
+     "delivered": true,
+     "deliveredDate": "2026-09-24T12:00:00+04:00",
+     "options": [
+      {
+       "cost": 600,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 950
+      }
+     ],
+     "part": "Headlamp RH",
+     "qty": 1,
+     "vehicle": "Toyota Land Cruiser 2016",
+     "k": "e1k0"
+    },
+    {
+     "chosen": 0,
+     "delivered": true,
+     "deliveredDate": "2026-09-24T12:00:00+04:00",
+     "options": [
+      {
+       "cost": 250,
+       "disc": 20,
+       "lead": 0,
+       "quality": "used",
+       "sell": 420
+      }
+     ],
+     "part": "Front grille",
+     "qty": 1,
+     "vehicle": "Toyota Land Cruiser 2016",
+     "k": "e1k1"
+    }
+   ],
+   "message": "LC 2016 headlamp right side + grille",
+   "notes": "",
+   "photos": [],
+   "quoteDate": "2026-09-23T11:00:00+04:00",
+   "quoteNo": 1,
+   "quoteRev": 1,
+   "salesperson": "Faisal",
+   "sample": true,
+   "sender": "Imran",
+   "status": "paid"
+  },
+  "e4": {
+   "commAmt": 50,
+   "commPaid": false,
+   "confirmDate": "2026-10-15T14:00:00+04:00",
+   "createdAt": "2026-10-15T11:15:00+04:00",
+   "customerId": "c1",
+   "enqNo": 4,
+   "extraDisc": 0,
+   "items": [
+    {
+     "chosen": 0,
+     "delivered": true,
+     "deliveredDate": "2026-10-16T11:00:00+04:00",
+     "options": [
+      {
+       "cost": 280,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 480
+      }
+     ],
+     "part": "Side mirror RH",
+     "qty": 1,
+     "vehicle": "Lexus ES350 2015",
+     "k": "e4k0"
+    },
+    {
+     "chosen": 0,
+     "delivered": true,
+     "deliveredDate": "2026-10-16T11:00:00+04:00",
+     "options": [
+      {
+       "cost": 300,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 520
+      }
+     ],
+     "part": "Tail lamp LH",
+     "qty": 1,
+     "vehicle": "Lexus ES350 2015",
+     "k": "e4k1"
+    }
+   ],
+   "message": "ES350 2015 RH mirror + LH tail lamp",
+   "notes": "",
+   "photos": [],
+   "quoteDate": "2026-10-15T12:00:00+04:00",
+   "quoteNo": 4,
+   "quoteRev": 1,
+   "salesperson": "Faisal",
+   "sample": true,
+   "sender": "Sameer",
+   "status": "paid"
+  },
+  "e9": {
+   "commAmt": 0,
+   "commPaid": false,
+   "confirmDate": null,
+   "createdAt": "2026-11-05T14:48:00+04:00",
+   "customerId": "c2",
+   "enqNo": 9,
+   "extraDisc": 0,
+   "items": [
+    {
+     "chosen": 0,
+     "delivered": false,
+     "deliveredDate": null,
+     "options": [
+      {
+       "cost": "3000",
+       "disc": 0,
+       "lead": "10",
+       "quality": "used",
+       "sell": "4000"
+      }
+     ],
+     "part": "Front bumper",
+     "qty": 1,
+     "vehicle": "Toyota Camry 2019",
+     "k": "e9k0"
+    }
+   ],
+   "message": "need Camry 2019 front bumper and both headlights pls",
+   "notes": "",
+   "photos": [],
+   "quoteDate": "2026-11-06T12:09:32.191000+00:00",
+   "quoteNo": 8,
+   "quoteRev": 1,
+   "salesperson": "",
+   "sample": true,
+   "sender": "Rashid",
+   "status": "quoted"
+  },
+  "e8": {
+   "commAmt": 0,
+   "commPaid": false,
+   "confirmDate": null,
+   "createdAt": "2026-11-05T13:05:00+04:00",
+   "customerId": "c3",
+   "enqNo": 8,
+   "extraDisc": 0,
+   "items": [
+    {
+     "chosen": 0,
+     "delivered": false,
+     "deliveredDate": null,
+     "options": [
+      {
+       "cost": 0,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 0
+      }
+     ],
+     "part": "Bonnet",
+     "qty": 1,
+     "vehicle": "Nissan Patrol 2018",
+     "k": "e8k0"
+    },
+    {
+     "chosen": 0,
+     "delivered": false,
+     "deliveredDate": null,
+     "options": [
+      {
+       "cost": 0,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 0
+      }
+     ],
+     "part": "Headlamp RH",
+     "qty": 1,
+     "vehicle": "Nissan Patrol 2018",
+     "k": "e8k1"
+    }
+   ],
+   "message": "Patrol 2018 bonnet + RH headlamp, photo attached",
+   "notes": "",
+   "photos": [],
+   "quoteDate": null,
+   "quoteNo": null,
+   "quoteRev": 1,
+   "salesperson": "",
+   "sample": true,
+   "sender": "Anil",
+   "status": "new"
+  },
+  "e7": {
+   "commAmt": 35,
+   "commPaid": false,
+   "confirmDate": "2026-11-03T12:00:00+04:00",
+   "createdAt": "2026-11-03T10:00:00+04:00",
+   "customerId": "c1",
+   "enqNo": 7,
+   "extraDisc": 0,
+   "items": [
+    {
+     "chosen": 1,
+     "delivered": false,
+     "deliveredDate": null,
+     "options": [
+      {
+       "cost": 500,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 820
+      },
+      {
+       "cost": 260,
+       "disc": 0,
+       "lead": 3,
+       "quality": "aftermarket",
+       "sell": 480
+      }
+     ],
+     "part": "Front bumper",
+     "qty": 1,
+     "vehicle": "Kia Sportage 2019",
+     "k": "e7k0"
+    },
+    {
+     "chosen": 0,
+     "delivered": true,
+     "deliveredDate": "2026-11-03T17:00:00+04:00",
+     "options": [
+      {
+       "cost": 120,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 220
+      }
+     ],
+     "part": "Fog lamps (pair)",
+     "qty": 1,
+     "vehicle": "Kia Sportage 2019",
+     "k": "e7k1"
+    }
+   ],
+   "message": "Sportage 2019 front bumper, fog lamps pair",
+   "notes": "",
+   "photos": [],
+   "quoteDate": "2026-11-03T11:30:00+04:00",
+   "quoteNo": 7,
+   "quoteRev": 1,
+   "salesperson": "Joseph",
+   "sample": true,
+   "sender": "Imran",
+   "status": "confirmed"
+  },
+  "e3": {
+   "commAmt": 0,
+   "commPaid": false,
+   "confirmDate": null,
+   "createdAt": "2026-10-09T16:40:00+04:00",
+   "customerId": "c2",
+   "enqNo": 3,
+   "extraDisc": 0,
+   "items": [
+    {
+     "chosen": 0,
+     "delivered": false,
+     "deliveredDate": null,
+     "options": [
+      {
+       "cost": 2200,
+       "disc": 0,
+       "lead": 0,
+       "quality": "used",
+       "sell": 3100
+      },
+      {
+       "cost": 5200,
+       "disc": 0,
+       "lead": 10,
+       "quality": "original",
+       "sell": 6900
+      }
+     ],
+     "part": "Gearbox (automatic)",
+     "qty": 1,
+     "vehicle": "Honda Accord 2017",
+     "k": "e3k0"
+    }
+   ],
+   "message": "accord 2017 gearbox auto",
+   "notes": "",
+   "photos": [],
+   "quoteDate": "2026-10-09T17:30:00+04:00",
+   "quoteNo": 3,
+   "quoteRev": 1,
+   "salesperson": "Faisal",
+   "sample": true,
+   "sender": "Rashid",
+   "status": "lost"
+  }
+ },
+ "invoices": {
+  "si1": {
+   "invNo": 1,
+   "enquiryId": "e1",
+   "enqRef": "ENQ-0001",
+   "quoteRef": "QT-0001",
+   "customerId": "c1",
+   "issueDate": "2026-09-24T09:30:00+04:00",
+   "supplyDate": "2026-09-24T09:30:00+04:00",
+   "payTerms": 0,
+   "dueDate": "2026-09-24T00:00:00+04:00",
+   "seller": {
+    "name": "Your Company Name",
+    "address": "Dubai, United Arab Emirates",
+    "phone": "+971 5X XXX XXXX",
+    "email": "",
+    "licence": "",
+    "authority": "",
+    "bank": "Bank name \u00b7 Account name \u00b7 IBAN (add in Settings)",
+    "terms": "Used parts sold as inspected. Fitment warranty 7 days on engines and gearboxes only. Returns accepted within 3 days in original condition."
+   },
+   "buyer": {
+    "name": "Al Quoz Auto Care Workshop",
+    "address": "Al Quoz Industrial 3, Dubai",
+    "trn": "100345678900003",
+    "attn": "Imran"
+   },
+   "lines": [
+    {
+     "ik": "e1k0",
+     "part": "Headlamp RH",
+     "vehicle": "Toyota Land Cruiser 2016",
+     "quality": "used",
+     "qty": 1,
+     "unit": 950,
+     "disc": 0,
+     "amount": 950,
+     "cost": 600,
+     "lead": 0
+    },
+    {
+     "ik": "e1k1",
+     "part": "Front grille",
+     "vehicle": "Toyota Land Cruiser 2016",
+     "quality": "used",
+     "qty": 1,
+     "unit": 420,
+     "disc": 20,
+     "amount": 400,
+     "cost": 250,
+     "lead": 0
+    }
+   ],
+   "sub": 1350,
+   "extraDisc": 0,
+   "total": 1350,
+   "salesperson": "Faisal",
+   "commAmt": 60,
+   "commPaid": true,
+   "status": "paid",
+   "payments": [
+    {
+     "amount": 1350,
+     "date": "2026-10-01T12:00:00+04:00",
+     "method": "Cash",
+     "ref": ""
+    }
+   ],
+   "notes": "",
+   "sample": true,
+   "paidDate": "2026-10-01T12:00:00+04:00"
+  },
+  "si2": {
+   "invNo": 2,
+   "enquiryId": "e2",
+   "enqRef": "ENQ-0002",
+   "quoteRef": "QT-0002",
+   "customerId": "c3",
+   "issueDate": "2026-10-28T15:00:00+04:00",
+   "supplyDate": "2026-10-28T15:00:00+04:00",
+   "payTerms": 0,
+   "dueDate": "2026-10-28T00:00:00+04:00",
+   "seller": {
+    "name": "Your Company Name",
+    "address": "Dubai, United Arab Emirates",
+    "phone": "+971 5X XXX XXXX",
+    "email": "",
+    "licence": "",
+    "authority": "",
+    "bank": "Bank name \u00b7 Account name \u00b7 IBAN (add in Settings)",
+    "terms": "Used parts sold as inspected. Fitment warranty 7 days on engines and gearboxes only. Returns accepted within 3 days in original condition."
+   },
+   "buyer": {
+    "name": "Musaffah Precision Motors",
+    "address": "M-14, Musaffah, Abu Dhabi",
+    "trn": "100987654300003",
+    "attn": "Anil"
+   },
+   "lines": [
+    {
+     "ik": "e2k0",
+     "part": "Bonnet",
+     "vehicle": "Nissan Patrol 2018",
+     "quality": "used",
+     "qty": 1,
+     "unit": 1400,
+     "disc": 0,
+     "amount": 1400,
+     "cost": 900,
+     "lead": 0
+    },
+    {
+     "ik": "e2k1",
+     "part": "Fender LH",
+     "vehicle": "Nissan Patrol 2018",
+     "quality": "aftermarket",
+     "qty": 1,
+     "unit": 380,
+     "disc": 0,
+     "amount": 380,
+     "cost": 180,
+     "lead": 5
+    }
+   ],
+   "sub": 1780,
+   "extraDisc": 50,
+   "total": 1730,
+   "salesperson": "Joseph",
+   "commAmt": 90,
+   "commPaid": false,
+   "status": "issued",
+   "payments": [],
+   "notes": "",
+   "sample": true
+  },
+  "si3": {
+   "invNo": 3,
+   "enquiryId": "e4",
+   "enqRef": "ENQ-0004",
+   "quoteRef": "QT-0004",
+   "customerId": "c1",
+   "issueDate": "2026-10-16T10:00:00+04:00",
+   "supplyDate": "2026-10-16T10:00:00+04:00",
+   "payTerms": 0,
+   "dueDate": "2026-10-16T00:00:00+04:00",
+   "seller": {
+    "name": "Your Company Name",
+    "address": "Dubai, United Arab Emirates",
+    "phone": "+971 5X XXX XXXX",
+    "email": "",
+    "licence": "",
+    "authority": "",
+    "bank": "Bank name \u00b7 Account name \u00b7 IBAN (add in Settings)",
+    "terms": "Used parts sold as inspected. Fitment warranty 7 days on engines and gearboxes only. Returns accepted within 3 days in original condition."
+   },
+   "buyer": {
+    "name": "Al Quoz Auto Care Workshop",
+    "address": "Al Quoz Industrial 3, Dubai",
+    "trn": "100345678900003",
+    "attn": "Sameer"
+   },
+   "lines": [
+    {
+     "ik": "e4k0",
+     "part": "Side mirror RH",
+     "vehicle": "Lexus ES350 2015",
+     "quality": "used",
+     "qty": 1,
+     "unit": 580,
+     "disc": 0,
+     "amount": 580.0,
+     "cost": 280,
+     "lead": 0
+    },
+    {
+     "ik": "e4k1",
+     "part": "Tail lamp LH",
+     "vehicle": "Lexus ES350 2015",
+     "quality": "used",
+     "qty": 1,
+     "unit": 520,
+     "disc": 0,
+     "amount": 520,
+     "cost": 300,
+     "lead": 0
+    }
+   ],
+   "sub": 1100.0,
+   "extraDisc": 0,
+   "total": 1100.0,
+   "salesperson": "Faisal",
+   "commAmt": 50,
+   "commPaid": false,
+   "status": "cancelled",
+   "payments": [],
+   "notes": "",
+   "sample": true,
+   "creditId": "sc1",
+   "cancelledDate": "2026-10-16T15:00:00+04:00"
+  },
+  "si5": {
+   "invNo": 5,
+   "enquiryId": "e4",
+   "enqRef": "ENQ-0004",
+   "quoteRef": "QT-0004",
+   "customerId": "c1",
+   "issueDate": "2026-10-16T15:00:00+04:00",
+   "supplyDate": "2026-10-16T15:00:00+04:00",
+   "payTerms": 0,
+   "dueDate": "2026-10-16T00:00:00+04:00",
+   "seller": {
+    "name": "Your Company Name",
+    "address": "Dubai, United Arab Emirates",
+    "phone": "+971 5X XXX XXXX",
+    "email": "",
+    "licence": "",
+    "authority": "",
+    "bank": "Bank name \u00b7 Account name \u00b7 IBAN (add in Settings)",
+    "terms": "Used parts sold as inspected. Fitment warranty 7 days on engines and gearboxes only. Returns accepted within 3 days in original condition."
+   },
+   "buyer": {
+    "name": "Al Quoz Auto Care Workshop",
+    "address": "Al Quoz Industrial 3, Dubai",
+    "trn": "100345678900003",
+    "attn": "Sameer"
+   },
+   "lines": [
+    {
+     "ik": "e4k0",
+     "part": "Side mirror RH",
+     "vehicle": "Lexus ES350 2015",
+     "quality": "used",
+     "qty": 1,
+     "unit": 480,
+     "disc": 0,
+     "amount": 480,
+     "cost": 280,
+     "lead": 0
+    },
+    {
+     "ik": "e4k1",
+     "part": "Tail lamp LH",
+     "vehicle": "Lexus ES350 2015",
+     "quality": "used",
+     "qty": 1,
+     "unit": 520,
+     "disc": 0,
+     "amount": 520,
+     "cost": 300,
+     "lead": 0
+    }
+   ],
+   "sub": 1000,
+   "extraDisc": 0,
+   "total": 1000,
+   "salesperson": "Faisal",
+   "commAmt": 50,
+   "commPaid": false,
+   "status": "paid",
+   "payments": [
+    {
+     "amount": 1000,
+     "date": "2026-10-22T11:00:00+04:00",
+     "method": "Bank transfer",
+     "ref": ""
+    }
+   ],
+   "notes": "",
+   "sample": true,
+   "paidDate": "2026-10-22T11:00:00+04:00"
+  },
+  "si4": {
+   "invNo": 4,
+   "enquiryId": "e5",
+   "enqRef": "ENQ-0005",
+   "quoteRef": "QT-0005",
+   "customerId": "c3",
+   "issueDate": "2026-10-31T12:30:00+04:00",
+   "supplyDate": "2026-10-31T12:30:00+04:00",
+   "payTerms": 30,
+   "dueDate": "2026-11-30T00:00:00+04:00",
+   "seller": {
+    "name": "Your Company Name",
+    "address": "Dubai, United Arab Emirates",
+    "phone": "+971 5X XXX XXXX",
+    "email": "",
+    "licence": "",
+    "authority": "",
+    "bank": "Bank name \u00b7 Account name \u00b7 IBAN (add in Settings)",
+    "terms": "Used parts sold as inspected. Fitment warranty 7 days on engines and gearboxes only. Returns accepted within 3 days in original condition."
+   },
+   "buyer": {
+    "name": "Musaffah Precision Motors",
+    "address": "M-14, Musaffah, Abu Dhabi",
+    "trn": "100987654300003",
+    "attn": "Anil"
+   },
+   "lines": [
+    {
+     "ik": "e5k0",
+     "part": "Rear bumper",
+     "vehicle": "Toyota Hilux 2020",
+     "quality": "used",
+     "qty": 1,
+     "unit": 750,
+     "disc": 0,
+     "amount": 750,
+     "cost": 450,
+     "lead": 0
+    },
+    {
+     "ik": "e5k1",
+     "part": "Tailgate",
+     "vehicle": "Toyota Hilux 2020",
+     "quality": "original",
+     "qty": 1,
+     "unit": 2600,
+     "disc": 0,
+     "amount": 2600,
+     "cost": 1900,
+     "lead": 7
+    }
+   ],
+   "sub": 3350,
+   "extraDisc": 0,
+   "total": 3350,
+   "salesperson": "Joseph",
+   "commAmt": 160,
+   "commPaid": false,
+   "status": "issued",
+   "payments": [],
+   "notes": "",
+   "sample": true
+  }
+ },
+ "credits": {
+  "sc1": {
+   "cnNo": 1,
+   "invoiceId": "si3",
+   "invRef": "INV-0003",
+   "invDate": "2026-10-16T10:00:00+04:00",
+   "customerId": "c1",
+   "enquiryId": "e4",
+   "date": "2026-10-16T15:00:00+04:00",
+   "reason": "Wrong price on side mirror RH (580 instead of 480)",
+   "seller": {
+    "name": "Your Company Name",
+    "address": "Dubai, United Arab Emirates",
+    "phone": "+971 5X XXX XXXX",
+    "email": "",
+    "licence": "",
+    "authority": "",
+    "bank": "Bank name \u00b7 Account name \u00b7 IBAN (add in Settings)",
+    "terms": "Used parts sold as inspected. Fitment warranty 7 days on engines and gearboxes only. Returns accepted within 3 days in original condition."
+   },
+   "buyer": {
+    "name": "Al Quoz Auto Care Workshop",
+    "address": "Al Quoz Industrial 3, Dubai",
+    "trn": "100345678900003",
+    "attn": "Sameer"
+   },
+   "lines": [
+    {
+     "ik": "e4k0",
+     "part": "Side mirror RH",
+     "vehicle": "Lexus ES350 2015",
+     "quality": "used",
+     "qty": 1,
+     "unit": 580,
+     "disc": 0,
+     "amount": 580.0,
+     "cost": 280,
+     "lead": 0
+    },
+    {
+     "ik": "e4k1",
+     "part": "Tail lamp LH",
+     "vehicle": "Lexus ES350 2015",
+     "quality": "used",
+     "qty": 1,
+     "unit": 520,
+     "disc": 0,
+     "amount": 520,
+     "cost": 300,
+     "lead": 0
+    }
+   ],
+   "sub": 1100.0,
+   "extraDisc": 0,
+   "total": 1100.0,
+   "sample": true
+  }
+ }
+}
