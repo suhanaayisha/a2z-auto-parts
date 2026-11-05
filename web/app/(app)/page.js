@@ -52,8 +52,8 @@ export default function Dashboard() {
         <section className="panel"><div className="hd"><h2>Awaiting delivery</h2><span className="small faint">Due date from lead time</span></div>
           <div className="list">{awaiting.length ? awaiting.map(e => <EnqRow key={e.id} e={e} />) : <div className="empty">All confirmed orders are delivered.</div>}</div></section>
         <section className="panel"><div className="hd"><h2>Workshops</h2><span className="small faint">Last 90 days</span></div>
-          <div className="tw"><table><thead><tr><th>Workshop</th><th className="r">Enq.</th><th className="r">Won</th><th className="r">Win rate</th><th className="r">Sales</th><th className="r">Unpaid</th></tr></thead>
-            <tbody>{rows.length ? rows.map(r => <tr key={r.c.id}><td>{r.c.name}</td><td className="r num">{r.cnt}</td><td className="r num">{r.won}</td><td className="r num">{r.conv}</td><td className="r num">{money(r.s)}</td><td className={"r num" + (r.due ? " neg" : "")}>{money(r.due)}</td></tr>)
+          <div className="tw"><table className="stack"><thead><tr><th>Workshop</th><th className="r">Enq.</th><th className="r">Won</th><th className="r">Win rate</th><th className="r">Sales</th><th className="r">Unpaid</th></tr></thead>
+            <tbody>{rows.length ? rows.map(r => <tr key={r.c.id}><td className="full"><b>{r.c.name}</b></td><td className="num" data-l="Enq.">{r.cnt}</td><td className="r num" data-l="Won">{r.won}</td><td className="num" data-l="Win rate">{r.conv}</td><td className="r num" data-l="Sales">{money(r.s)}</td><td className={"num" + (r.due ? " neg" : "")} data-l="Unpaid">{money(r.due)}</td></tr>)
               : <tr><td colSpan={6} className="muted">Add your first workshop under Customers.</td></tr>}</tbody></table></div></section>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -65,8 +65,8 @@ export default function Dashboard() {
             <p className="small muted" style={{ margin: 0 }}>Invoiced sales, less cancelled invoices. Once taxable sales pass AED 375,000 in any 12 months, or are expected to within the next 30 days, you must register with the FTA. Until then, documents say &quot;Invoice&quot;, not &quot;Tax Invoice&quot;, and carry no VAT.</p>
           </div></section>
         {<section className="panel"><div className="hd"><h2>Commission</h2><span className="pill" style={{ background: "var(--internal-soft)", color: "var(--internal)" }}>Internal only</span></div>
-          <div className="tw"><table><thead><tr><th>Salesperson</th><th className="r">Sales · {mName}</th><th className="r">Earned · {mName}</th><th className="r">Not yet paid</th></tr></thead>
-            <tbody>{Object.keys(cm).length ? Object.entries(cm).map(([k, v]) => <tr key={k}><td>{k}</td><td className="r num">{money(v.sales)}</td><td className="r num">{money(v.m)}</td><td className="r num">{money(v.owed)}</td></tr>)
+          <div className="tw"><table className="stack"><thead><tr><th>Salesperson</th><th className="r">Sales · {mName}</th><th className="r">Earned · {mName}</th><th className="r">Not yet paid</th></tr></thead>
+            <tbody>{Object.keys(cm).length ? Object.entries(cm).map(([k, v]) => <tr key={k}><td className="full"><b>{k}</b></td><td className="num" data-l={"Sales · " + mName}>{money(v.sales)}</td><td className="r num" data-l={"Earned · " + mName}>{money(v.m)}</td><td className="num" data-l="Not yet paid">{money(v.owed)}</td></tr>)
               : <tr><td colSpan={4} className="muted">No commission on invoices yet.</td></tr>}</tbody></table></div></section>}
       </div>
     </div>

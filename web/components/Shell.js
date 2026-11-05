@@ -54,7 +54,7 @@ export default function Shell({ children }) {
           <div className="sp" />
           <div className="userchip"><span className="nm"><b>{data.me.name}</b></span>
             <button className="btn ghost sm" type="button" onClick={signOut}>Sign out</button></div>
-          <Link className="btn primary" href="/enquiries/new">+ New enquiry</Link>
+          <Link className="btn primary" href="/enquiries/new">+ New<span className="lg"> enquiry</span></Link>
         </div>
         <nav className="tabs" aria-label="Sections">
           {TABS.map(([href, label]) => (
