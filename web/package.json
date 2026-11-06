@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "PORT=3000 node --env-file-if-exists=../api/.env server.mjs",
-    "build": "next build",
+    "build": "npm ci --prefix ../api --omit=dev && next build",
     "start": "NODE_ENV=production node server.mjs"
   },
   "dependencies": {

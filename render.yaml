@@ -6,7 +6,7 @@ services:
     runtime: node
     plan: starter        # $7/month, never sleeps. "free" also works but sleeps after 15 min idle and takes ~1 min to wake.
     region: frankfurt    # keep in the same region as your MongoDB Atlas cluster
-    buildCommand: cd api && npm ci --omit=dev && cd ../web && npm ci && npm run build
+    buildCommand: cd web && npm ci && npm run build   # the build also installs ../api's packages
     startCommand: cd web && npm start
     healthCheckPath: /healthz
     autoDeployTrigger: commit
