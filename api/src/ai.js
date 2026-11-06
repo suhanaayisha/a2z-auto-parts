@@ -26,7 +26,7 @@ Decide what it is and reply with JSON only:
  "items":[{"vehicle":"Make Model Year","part":"Part name with side (LH/RH) and front/rear where given","qty":1,"quality":"used|aftermarket|original, only if asked"}],
  "notes":"one short line on anything unclear, e.g. which side, year missing, photo unclear; empty if nothing"}
 kind: "enquiry" = asking for parts or prices. "quote_reply" = answering a quote we sent (codes like "1A 2B", "ok confirm", "too expensive", "send"). "other" = greetings, payment talk, delivery chat, anything else. items only for "enquiry".
-Read a vehicle from a registration card or VIN photo when it is legible. Name a part from a photo only when it is clear what it is.
+Read a vehicle from a registration card or VIN photo when it is legible. When the chat ends with "VIN lookups", use the make, model and year given there for the vehicle the VIN belongs to (a year marked "probably" counts as known); keep the workshop's own wording of the model if it is more specific. Name a part from a photo only when it is clear what it is.
 confidence = how sure you are that kind, vehicle and every part are right and complete: 0.9+ only when the vehicle (make and model) and every part are stated or clearly visible; lower it when the vehicle or side is missing, a photo is the only source, or the voice note is unclear.
 ${RULES}`;
 

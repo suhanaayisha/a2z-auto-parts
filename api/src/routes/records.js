@@ -5,6 +5,7 @@ import { col, out, nextSeq } from "../db.js";
 import {
   n, isPriced, statusFromInvoices, invQty, itemKey,
 } from "../calc.js";
+import { forgetTeamNumbers } from "../wa/ingest.js";
 
 export const records = Router();
 const uid = p => p + crypto.randomBytes(7).toString("hex");
@@ -45,9 +46,13 @@ records.put("/settings/company", async (req, res) => {
     phone: str(b.phone, 60), email: str(b.email, 120), bank: str(b.bank, 300), terms: str(b.terms, 1500),
     quoteValidDays: Math.max(1, Math.round(n(b.quoteValidDays) || 7)), payDays: Math.max(0, Math.round(n(b.payDays))),
     salespeople: (Array.isArray(b.salespeople) ? b.salespeople : []).map(p => ({ name: str(p.name, 80), pct: n(p.pct) })).filter(p => p.name).slice(0, 50),
+    // WhatsApp numbers the team sends from. Their messages are never read as parts requests.
+    teamNumbers: [...new Set((Array.isArray(b.teamNumbers) ? b.teamNumbers : String(b.teamNumbers || "").split(/[\n,;]+/))
+      .map(x => String(x).replace(/[^\d+]/g, "")).filter(x => x.replace(/\D/g, "").length >= 8))].slice(0, 50),
     vatRegistered: false, updatedAt: now(),
   };
   await col.settings.replaceOne({ _id: "company" }, co, { upsert: true });
+  forgetTeamNumbers();
   res.json({ company: Object.assign({ id: "company" }, co) });
 });
 

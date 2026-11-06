@@ -51,6 +51,9 @@ function CompanyForm() {
               <button className="btn ghost sm" type="button" aria-label="Remove" onClick={() => setSp(s => s.filter((_, k) => k !== i))}>✕</button>
             </div>))}</div>
           <button className="btn sm" type="button" style={{ marginTop: 8 }} onClick={() => setSp(s => s.concat({ name: "", pct: 5 }))}>+ Add salesperson</button></div>
+        <label className="field"><span>Our team&apos;s WhatsApp numbers <span className="faint">(one per line)</span></span>
+          <textarea name="teamNumbers" rows={3} defaultValue={(company.teamNumbers || []).join("\n")} placeholder={"+971 50 123 4567\n+971 55 765 4321"} />
+          <span className="small faint">Messages from these numbers in workshop groups, such as prices your salespeople send, are never read as parts requests. The linked WhatsApp phone is ignored already.</span></label>
         <div className="row"><button className="btn primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save settings"}</button></div>
       </form>
     </section>

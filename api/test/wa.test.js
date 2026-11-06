@@ -15,6 +15,7 @@ const { ingestMessage } = await import("../src/wa/ingest.js");
 const { processDue } = await import("../src/wa/processor.js");
 const { setAiStub } = await import("../src/ai.js");
 const { setTranscribeStub } = await import("../src/wa/transcribe.js");
+const { setVinStub, findVins, yearFromVin } = await import("../src/wa/vin.js");
 
 let server, BASE, cookie = "", customerId;
 const call = async (method, path, body) => {
@@ -38,6 +39,8 @@ before(async () => {
     const text = content.filter(c => c.type === "text").map(c => c.text).join("\n");
     seen.push({ text, images: content.filter(c => c.type === "image").length });
     if (/1A 2B/.test(text)) return JSON.stringify({ kind: "quote_reply", confidence: 0.95 });
+    if (/CHEROKEE/.test(text)) return JSON.stringify({ kind: "enquiry", confidence: /VIN lookups[\s\S]*2018 Jeep Grand Cherokee/.test(text) ? 0.93 : 0.6,
+      items: ["A.c blower assembly", "A.c filter", "Alternator bearing"].map(part => ({ vehicle: "Jeep Grand Cherokee 2018", part, qty: 1 })) });
     if (/headlight/i.test(text)) return JSON.stringify({ kind: "enquiry", confidence: 0.95, sender: "Imran", items: [{ vehicle: "Toyota Land Cruiser 2018", part: "Headlamp LH", qty: 1 }, { vehicle: "Toyota Land Cruiser 2018", part: "Headlamp RH", qty: 1 }] });
     if (/mirror/i.test(text)) return JSON.stringify({ kind: "enquiry", confidence: 0.92, items: [{ vehicle: "Nissan Patrol 2019", part: "Side mirror RH", qty: 1, quality: "used" }] });
     return JSON.stringify({ kind: "enquiry", confidence: 0.5, items: [{ vehicle: "", part: "Bumper", qty: 1 }], notes: "Vehicle not given" });
@@ -139,6 +142,32 @@ test("dismiss and retry", async () => {
   assert.equal((await call("POST", `/wa/batches/${b._id}/retry`)).status, 200);
   await processDue(Date.now() + 1000);
   assert.equal((await col.wa_batches.findOne({ _id: b._id })).status, "review");
+});
+
+test("messages from the team's own numbers are kept but never read as requests", async () => {
+  let r = await call("PUT", "/settings/company", { name: "A2Z Auto Spare Parts", address: "Sharjah", teamNumbers: "+971 50 000 1111\nnot a number" });
+  assert.deepEqual(r.company.teamNumbers, ["+971500001111"]);
+  const saved = await ingestMessage(msg("t1", "555@g.us", "Car Experts", { sender: "971500001111@s.whatsapp.net", senderName: "A2Z", text: "A.c blower assym--540\nA.c filter-65" }));
+  assert.equal(saved.fromTeam, true);
+  assert.equal(saved.batchId, null);
+  assert.equal(await col.wa_batches.countDocuments({ chat: "555@g.us" }), 0, "no batch, so nothing for the reader");
+});
+
+test("a VIN is decoded and the year reaches the reader and the enquiry notes", async () => {
+  assert.deepEqual(findVins("JEEP GRAND CHEROKEE\n1C4RJFBG5JC325647\ncall 971562187411"), ["1C4RJFBG5JC325647"]);
+  assert.equal(yearFromVin("1C4RJFBG5JC325647"), 2018);
+  setVinStub(async vin => ({ vin, year: 2018, make: "Jeep", model: "Grand Cherokee", trim: "Limited", engine: "3.6L 6-cyl", confirmed: true }));
+  await col.customers.updateOne({ _id: customerId }, { $set: { groups: "Al Noor Parts, Car Experts" } });
+  await ingestMessage(msg("j1", "555@g.us", "Car Experts", { sender: "971562187411@s.whatsapp.net", senderName: "Car Experts",
+    text: "JEEP GRAND CHEROKEE\n1C4RJFBG5JC325647\n\nA.c blower assym\nA.c filter\nAlternantor bearing" }));
+  await processDue(Date.now() + 61e3);
+  const b = await col.wa_batches.findOne({ chat: "555@g.us" });
+  assert.match(seen.at(-1).text, /VIN 1C4RJFBG5JC325647: 2018 Jeep Grand Cherokee Limited, 3\.6L 6-cyl/);
+  assert.equal(b.status, "created", "sure enough once the VIN gave the year");
+  const e = await col.enquiries.findOne({ _id: b.enquiryId });
+  assert.equal(e.items[0].vehicle, "Jeep Grand Cherokee 2018");
+  assert.match(e.notes, /VIN 1C4RJFBG5JC325647/);
+  setVinStub(null);
 });
 
 test("a failing read is retried, then marked failed", async () => {

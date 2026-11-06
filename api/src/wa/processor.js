@@ -11,6 +11,7 @@ import { aiEnabled, readChat } from "../ai.js";
 import { transcribe, transcribeEnabled } from "./transcribe.js";
 import { createEnquiry } from "../routes/records.js";
 import { audit } from "./ingest.js";
+import { findVins, decodeVin, vinLine } from "./vin.js";
 
 const num = (v, d) => (v === undefined || v === "" || !Number.isFinite(Number(v)) ? d : Number(v));
 export const config = () => ({
@@ -69,7 +70,7 @@ export async function enquiryFromBatch(batch, customerId, by, items) {
   }));
   const sender = x.sender || msgs.find(m => m.senderName)?.senderName || "";
   const message = transcriptOf(msgs).slice(0, 5000);
-  const notes = x.notes ? "WhatsApp reader: " + x.notes : "";
+  const notes = [...(x.vins || []).map(vinLine), x.notes ? "WhatsApp reader: " + x.notes : ""].filter(Boolean).join("\n");
   return createEnquiry({ customerId, sender, message, notes, items: list, photos: msgs.map(m => m.photoId).filter(Boolean) },
     by, { source: "whatsapp", waBatchId: batch._id, waChat: batch.chat });
 }
@@ -103,7 +104,13 @@ export async function processBatch(batch) {
       const p = await col.photos.findOne({ _id: m.photoId });
       if (p) images.push({ mime: p.mime, data: Buffer.isBuffer(p.data) ? p.data : Buffer.from(p.data.buffer ?? p.data) });
     }
-    const x = await readChat({ transcript: transcriptOf(msgs), images });
+    // VINs typed in the chat (or said in a voice note) → official make, model and year for the reader.
+    const vinText = msgs.map(m => [m.text, m.transcript].filter(Boolean).join(" ")).join("\n");
+    const vins = await Promise.all(findVins(vinText).map(decodeVin));
+    let transcript = transcriptOf(msgs);
+    if (vins.length) transcript += "\n\nVIN lookups (from an official VIN decoder):\n" + vins.map(vinLine).join("\n");
+    const x = await readChat({ transcript, images });
+    x.vins = vins;
     set.extraction = x;
     if (x.kind !== "enquiry") set.status = "ignored";
     else if (customerId && x.items.length && x.confidence >= cfg.autoAt) set.status = "created";

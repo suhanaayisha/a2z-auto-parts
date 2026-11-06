@@ -17,8 +17,30 @@ export async function audit(batchId, action, by, detail = {}) {
 // m: { id, chat, chatName, isGroup, sender, senderName, ts (ISO), type: text|image|audio|video|document|other,
 //      text, media?: { mime, data: Buffer } }
 // Returns the saved message, or null if it was a duplicate.
+// The team's own WhatsApp numbers (Settings → Your company), read at most every 30 seconds.
+let team = { at: 0, list: [] };
+const last9 = s => String(s || "").split("@")[0].split(":")[0].replace(/\D/g, "").slice(-9);
+export async function isTeamNumber(jid) {
+  if (Date.now() - team.at > 30e3) {
+    const co = await col.settings.findOne({ _id: "company" });
+    team = { at: Date.now(), list: (co?.teamNumbers || []).map(last9).filter(x => x.length === 9) };
+  }
+  const d = last9(jid);
+  return d.length === 9 && team.list.includes(d);
+}
+export function forgetTeamNumbers() { team.at = 0; }
+
 export async function ingestMessage(m) {
   if (await col.wa_messages.findOne({ _id: m.id })) return null; // WhatsApp can deliver the same message twice
+
+  // Messages from the team (e.g. a salesperson replying with prices from another phone) are kept for the
+  // record but never batched, so they are never read as a workshop's request.
+  if (await isTeamNumber(m.sender)) {
+    const doc = { _id: m.id, chat: m.chat, batchId: null, fromTeam: true, sender: m.sender || "", senderName: m.senderName || "", ts: m.ts,
+      type: m.type, text: String(m.text || "").slice(0, 5000), photoId: null, mediaId: null, transcript: null, note: "From the team", receivedAt: new Date().toISOString() };
+    await col.wa_messages.insertOne(doc);
+    return doc;
+  }
 
   let photoId = null, mediaId = null, note = "";
   if (m.media?.data?.length) {
