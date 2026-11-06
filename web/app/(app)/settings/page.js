@@ -60,25 +60,35 @@ function CompanyForm() {
 }
 
 // Saved on its own, so it doesn't need the company details above to be complete.
+// Once numbers are saved the box is locked; "Edit numbers" unlocks it.
 function TeamNumbers() {
   const { company, setCompany, toast } = useApp();
-  const [text, setText] = useState(() => (company.teamNumbers || []).join("\n"));
+  const saved = (company.teamNumbers || []).join("\n");
+  const [text, setText] = useState(saved);
+  const [editing, setEditing] = useState(() => !(company.teamNumbers || []).length);
   const [busy, setBusy] = useState(false);
   async function save(ev) {
     ev.preventDefault(); setBusy(true);
     try {
       const r = await api("PUT", "/settings/team-numbers", { teamNumbers: text });
-      setCompany(r.company); setText((r.company.teamNumbers || []).join("\n"));
-      toast(r.company.teamNumbers.length ? `Saved ${r.company.teamNumbers.length} number${r.company.teamNumbers.length === 1 ? "" : "s"}` : "Saved");
+      const list = r.company.teamNumbers || [];
+      setCompany(r.company); setText(list.join("\n")); setEditing(!list.length);
+      toast(list.length ? `Saved ${list.length} number${list.length === 1 ? "" : "s"}` : "Saved");
     } catch (e) { toast(e.message); } finally { setBusy(false); }
   }
+  const cancel = () => { setText(saved); setEditing(false); };
   return (
     <section className="panel"><div className="hd"><h2>Our team&apos;s WhatsApp numbers</h2><span className="small faint">Used by the WhatsApp tab</span></div>
       <form className="bd" onSubmit={save} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <label className="field"><span>One number per line, with the country code</span>
-          <textarea rows={3} value={text} onChange={e => setText(e.target.value)} placeholder={"+971 50 123 4567\n+971 55 765 4321"} /></label>
+          <textarea rows={3} value={text} onChange={e => setText(e.target.value)} disabled={!editing} placeholder={"+971 50 123 4567\n+971 55 765 4321"} /></label>
         <p className="small faint" style={{ margin: 0 }}>Messages from these numbers in workshop groups, such as prices your salespeople send, are never read as parts requests. The linked WhatsApp phone is ignored already.</p>
-        <div className="row"><button className="btn primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save numbers"}</button></div>
+        <div className="row">
+          {editing ? <>
+            <button key="save" className="btn primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save numbers"}</button>
+            {saved && <button key="cancel" className="btn" type="button" onClick={cancel} disabled={busy}>Cancel</button>}
+          </> : <button key="edit" className="btn" type="button" onClick={() => setEditing(true)}>Edit numbers</button>}
+        </div>
       </form>
     </section>
   );

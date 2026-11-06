@@ -329,3 +329,4 @@ td.mono,td.nw{white-space:nowrap}
 .wa-link img{border-radius:6px;background:#fff;padding:6px}
 .wa-link ol{padding-left:18px;margin:6px 0}
 .wa-qr-wait{width:220px;height:220px;display:grid;place-items:center;border:1px dashed var(--line);border-radius:6px}
+textarea:disabled,input:disabled{opacity:.65;cursor:not-allowed}
