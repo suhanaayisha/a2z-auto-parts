@@ -145,8 +145,11 @@ test("dismiss and retry", async () => {
 });
 
 test("messages from the team's own numbers are kept but never read as requests", async () => {
-  let r = await call("PUT", "/settings/company", { name: "A2Z Auto Spare Parts", address: "Sharjah", teamNumbers: "+971 50 000 1111\nnot a number" });
+  let r = await call("PUT", "/settings/team-numbers", { teamNumbers: "+971 50 000 1111\nnot a number" });
+  assert.equal(r.status, 200, "saved without any company details");
   assert.deepEqual(r.company.teamNumbers, ["+971500001111"]);
+  r = await call("PUT", "/settings/company", { name: "A2Z Auto Spare Parts", address: "Sharjah" });
+  assert.deepEqual(r.company.teamNumbers, ["+971500001111"], "saving company details keeps the numbers");
   const saved = await ingestMessage(msg("t1", "555@g.us", "Car Experts", { sender: "971500001111@s.whatsapp.net", senderName: "A2Z", text: "A.c blower assym--540\nA.c filter-65" }));
   assert.equal(saved.fromTeam, true);
   assert.equal(saved.batchId, null);

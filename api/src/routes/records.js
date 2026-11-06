@@ -46,14 +46,25 @@ records.put("/settings/company", async (req, res) => {
     phone: str(b.phone, 60), email: str(b.email, 120), bank: str(b.bank, 300), terms: str(b.terms, 1500),
     quoteValidDays: Math.max(1, Math.round(n(b.quoteValidDays) || 7)), payDays: Math.max(0, Math.round(n(b.payDays))),
     salespeople: (Array.isArray(b.salespeople) ? b.salespeople : []).map(p => ({ name: str(p.name, 80), pct: n(p.pct) })).filter(p => p.name).slice(0, 50),
-    // WhatsApp numbers the team sends from. Their messages are never read as parts requests.
-    teamNumbers: [...new Set((Array.isArray(b.teamNumbers) ? b.teamNumbers : String(b.teamNumbers || "").split(/[\n,;]+/))
-      .map(x => String(x).replace(/[^\d+]/g, "")).filter(x => x.replace(/\D/g, "").length >= 8))].slice(0, 50),
+
     vatRegistered: false, updatedAt: now(),
   };
+  // The team's WhatsApp numbers are saved on their own (below), so keep them as they are.
+  co.teamNumbers = (await col.settings.findOne({ _id: "company" }))?.teamNumbers || [];
   await col.settings.replaceOne({ _id: "company" }, co, { upsert: true });
-  forgetTeamNumbers();
   res.json({ company: Object.assign({ id: "company" }, co) });
+});
+
+// WhatsApp numbers the team sends from. Their messages are never read as parts requests.
+// Saved on their own so they don't depend on the company details being filled in.
+records.put("/settings/team-numbers", async (req, res) => {
+  const raw = req.body?.teamNumbers;
+  const teamNumbers = [...new Set((Array.isArray(raw) ? raw : String(raw || "").split(/[\n,;]+/))
+    .map(x => String(x).replace(/[^\d+]/g, "")).filter(x => x.replace(/\D/g, "").length >= 8))].slice(0, 50);
+  await col.settings.updateOne({ _id: "company" }, { $set: { teamNumbers } }, { upsert: true });
+  forgetTeamNumbers();
+  const co = await col.settings.findOne({ _id: "company" });
+  res.json({ company: Object.assign({ id: "company" }, (({ _id, ...rest }) => rest)(co)) });
 });
 
 // ---------- customers ----------
