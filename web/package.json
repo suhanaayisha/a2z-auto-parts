@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "description": "A2Z Auto Parts web app (Next.js)",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "PORT=3000 node --env-file-if-exists=../api/.env server.mjs",
     "build": "next build",
-    "start": "next start -p ${PORT:-3000}"
+    "start": "NODE_ENV=production node server.mjs"
   },
   "dependencies": {
     "jspdf": "2.5.2",

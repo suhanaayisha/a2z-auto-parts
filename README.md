@@ -2,11 +2,11 @@
 
 Enquiries, quotes, invoices and credit notes for a used auto parts business in the UAE.
 
-- **web/**: the screens (Next.js and React)
-- **api/**: the server (Node.js and Express) that stores everything in **MongoDB**
-- **render.yaml**: sets both up on **Render** in one go
+- **web/**: the screens (Next.js and React), plus `web/server.mjs`, which runs the whole app
+- **api/**: the API (Node.js and Express) that stores everything in **MongoDB**
+- **render.yaml**: sets it up on **Render** as one service
 
-The web app forwards every `/api/...` request to the API, so the browser only talks to one site and the login cookie stays secure.
+`web/server.mjs` runs both in one process: requests to `/api/...` and `/healthz` go to the API, and everything else goes to the screens. The browser only talks to one site, so the login cookie stays secure.
 
 ## What it does
 
@@ -38,37 +38,31 @@ The web app forwards every `/api/...` request to the API, so the browser only ta
 Create a **private** repository and push this folder to it.
 
 ### 3. Render
-1. In Render: **New + → Blueprint**, connect GitHub and pick the repository. Render reads `render.yaml` and shows two services.
+1. In Render: **New + → Blueprint**, connect GitHub and pick the repository. Render reads `render.yaml` and shows one service, **a2z-auto-parts-web**.
 2. When it asks for values:
    - `MONGODB_URI`: the Atlas connection string from step 1.
+   - `SESSION_SECRET`: any random string of 32 or more characters (for example, run `openssl rand -hex 32`). Changing it later signs everyone out.
    - `ANTHROPIC_API_KEY`: optional. It turns on "Read message into items". Leave it empty to skip.
-   - `API_URL`: enter `https://a2z-auto-parts-api.onrender.com` for now. You'll check it in step 4.
-3. Click **Apply** and wait for both services to finish deploying.
-4. Open the **a2z-auto-parts-api** service and copy its address from the top of the page. If it's different from what you entered, go to **a2z-auto-parts-web → Environment**, set `API_URL` to that address, and save. No rebuild is needed.
-5. Open the **a2z-auto-parts-web** address, choose **Create an account**, and sign up. That first account can sign in straight away.
-6. Go to **Settings** and fill in the company name (exactly as on the trade licence), trade licence number, issuing authority, address and bank details. Invoices can't be issued until the name and address are set.
-7. Your colleague signs up from the same sign-up page. You approve them under **Settings → Team**.
+3. Click **Apply** and wait for the deploy to finish.
+4. Open the **a2z-auto-parts-web** address, choose **Create an account**, and sign up. That first account can sign in straight away.
+5. Go to **Settings** and fill in the company name (exactly as on the trade licence), trade licence number, issuing authority, address and bank details. Invoices can't be issued until the name and address are set.
+6. Your colleague signs up from the same sign-up page. You approve them under **Settings → Team**.
 
-**Plans:** `render.yaml` uses Render's **free** plan. Free services go to sleep after 15 minutes without use and take about a minute to wake. For daily business use, change both services to **Starter** in Render, either in the dashboard or with `plan: starter` in `render.yaml`.
+**Plan:** `render.yaml` uses Render's **Starter** plan ($7/month), which never sleeps. To try it for free, change it to `plan: free`; free services go to sleep after 15 minutes without use and take about a minute to wake.
 
 **Own domain (optional):** in **a2z-auto-parts-web → Settings → Custom Domains**, add e.g. `app.yourcompany.ae` and follow Render's DNS steps.
 
 ## Run on your computer
 
-You need Node.js 20 or newer and a MongoDB connection string (Atlas works).
+You need Node.js 22 or newer and a MongoDB connection string (Atlas works).
 
 ```bash
-# terminal 1
 cd api
 cp .env.example .env        # fill in MONGODB_URI and SESSION_SECRET
 npm install
-npm run dev                 # http://localhost:4000
-
-# terminal 2
-cd web
-cp .env.example .env.local  # API_URL=http://localhost:4000
+cd ../web
 npm install
-npm run dev                 # open http://localhost:3000
+npm run dev                 # open http://localhost:3000 (reads its settings from api/.env)
 ```
 
 API tests use an in-memory stand-in for MongoDB, so no database is needed: `cd api && npm test`.

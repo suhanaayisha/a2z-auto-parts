@@ -292,6 +292,7 @@ td.mono,td.nw{white-space:nowrap}
   table.stack td[data-l]::before{content:attr(data-l) " ";color:var(--ink-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-family:var(--sans);font-weight:600}
   table.stack td.full{grid-column:1/-1;white-space:normal}
   table.stack td.r{text-align:right}
+  table.stack td.r.ml{text-align:left}
   table.stack td[colspan]{grid-column:1/-1}
 
   /* dialogs become full-height sheets */

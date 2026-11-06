@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "A2Z Auto Parts API: accounts, enquiries, quotes, invoices and credit notes on MongoDB",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --env-file=.env --watch src/server.js",

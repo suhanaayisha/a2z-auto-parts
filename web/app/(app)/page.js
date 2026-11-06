@@ -53,7 +53,7 @@ export default function Dashboard() {
           <div className="list">{awaiting.length ? awaiting.map(e => <EnqRow key={e.id} e={e} />) : <div className="empty">All confirmed orders are delivered.</div>}</div></section>
         <section className="panel"><div className="hd"><h2>Workshops</h2><span className="small faint">Last 90 days</span></div>
           <div className="tw"><table className="stack"><thead><tr><th>Workshop</th><th className="r">Enq.</th><th className="r">Won</th><th className="r">Win rate</th><th className="r">Sales</th><th className="r">Unpaid</th></tr></thead>
-            <tbody>{rows.length ? rows.map(r => <tr key={r.c.id}><td className="full"><b>{r.c.name}</b></td><td className="num" data-l="Enq.">{r.cnt}</td><td className="r num" data-l="Won">{r.won}</td><td className="num" data-l="Win rate">{r.conv}</td><td className="r num" data-l="Sales">{money(r.s)}</td><td className={"num" + (r.due ? " neg" : "")} data-l="Unpaid">{money(r.due)}</td></tr>)
+            <tbody>{rows.length ? rows.map(r => <tr key={r.c.id}><td className="full"><b>{r.c.name}</b></td><td className="r num ml" data-l="Enq.">{r.cnt}</td><td className="r num" data-l="Won">{r.won}</td><td className="r num ml" data-l="Win rate">{r.conv}</td><td className="r num" data-l="Sales">{money(r.s)}</td><td className={"r num ml" + (r.due ? " neg" : "")} data-l="Unpaid">{money(r.due)}</td></tr>)
               : <tr><td colSpan={6} className="muted">Add your first workshop under Customers.</td></tr>}</tbody></table></div></section>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -66,7 +66,7 @@ export default function Dashboard() {
           </div></section>
         {<section className="panel"><div className="hd"><h2>Commission</h2><span className="pill" style={{ background: "var(--internal-soft)", color: "var(--internal)" }}>Internal only</span></div>
           <div className="tw"><table className="stack"><thead><tr><th>Salesperson</th><th className="r">Sales · {mName}</th><th className="r">Earned · {mName}</th><th className="r">Not yet paid</th></tr></thead>
-            <tbody>{Object.keys(cm).length ? Object.entries(cm).map(([k, v]) => <tr key={k}><td className="full"><b>{k}</b></td><td className="num" data-l={"Sales · " + mName}>{money(v.sales)}</td><td className="r num" data-l={"Earned · " + mName}>{money(v.m)}</td><td className="num" data-l="Not yet paid">{money(v.owed)}</td></tr>)
+            <tbody>{Object.keys(cm).length ? Object.entries(cm).map(([k, v]) => <tr key={k}><td className="full"><b>{k}</b></td><td className="r num ml" data-l={"Sales · " + mName}>{money(v.sales)}</td><td className="r num" data-l={"Earned · " + mName}>{money(v.m)}</td><td className="r num ml" data-l="Not yet paid">{money(v.owed)}</td></tr>)
               : <tr><td colSpan={4} className="muted">No commission on invoices yet.</td></tr>}</tbody></table></div></section>}
       </div>
     </div>
