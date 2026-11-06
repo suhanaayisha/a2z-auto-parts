@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --env-file=.env --watch src/server.js",
-    "test": "node --test test/api.test.js"
+    "test": "node --test test/api.test.js test/wa.test.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.5.0",

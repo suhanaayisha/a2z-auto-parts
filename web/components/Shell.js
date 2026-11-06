@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 const Ctx = createContext(null);
 export const useApp = () => useContext(Ctx);
 
-const TABS = [["/", "Dashboard"], ["/enquiries", "Enquiries"], ["/documents", "Quotes & invoices"], ["/customers", "Customers"], ["/settings", "Settings"]];
+const TABS = [["/", "Dashboard"], ["/enquiries", "Enquiries"], ["/whatsapp", "WhatsApp"], ["/documents", "Quotes & invoices"], ["/customers", "Customers"], ["/settings", "Settings"]];
 
 export default function Shell({ children }) {
   const [data, setData] = useState(null);
@@ -60,6 +60,7 @@ export default function Shell({ children }) {
           {TABS.map(([href, label]) => (
             <Link key={href} href={href} aria-current={active(href) ? "page" : undefined}>
               {label}{href === "/enquiries" && pending ? <span className="count">{pending}</span> : null}
+              {href === "/whatsapp" && data.waReview ? <span className="count">{data.waReview}</span> : null}
             </Link>
           ))}
         </nav>

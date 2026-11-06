@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import express, { Router } from "express";
 import { col, out, setSeqAtLeast } from "../db.js";
 import { n } from "../calc.js";
+import { aiEnabled, readMessage } from "../ai.js";
 
 export const extras = Router();
 
@@ -22,23 +23,12 @@ extras.get("/photos/:id", async (req, res) => {
 });
 
 // ---------- reading a WhatsApp message into items (optional, needs ANTHROPIC_API_KEY) ----------
-let anthropic = null;
 extras.post("/ai/read", async (req, res) => {
-  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: "Message reading is off. Add ANTHROPIC_API_KEY to the API service." });
+  if (!aiEnabled()) return res.status(503).json({ error: "Message reading is off. Add ANTHROPIC_API_KEY to the API service." });
   const msg = String(req.body?.message || "").slice(0, 4000).trim();
   if (!msg) return res.status(400).json({ error: "Paste the WhatsApp message first." });
-  if (!anthropic) { const { default: Anthropic } = await import("@anthropic-ai/sdk"); anthropic = new Anthropic(); }
   try {
-    const r = await anthropic.messages.create({
-      model: process.env.AI_MODEL || "claude-haiku-4-5-20251001", max_tokens: 1000,
-      system: `You extract used car parts requests from WhatsApp messages sent by UAE garages to a used auto parts supplier. Reply with JSON only:
-{"items":[{"vehicle":"Make Model Year","part":"Part name with side (LH/RH) and front/rear where given","qty":1,"quality":"used|aftermarket|original, only if asked"}]}
-One entry per distinct part. "Both headlights" = Headlamp LH and Headlamp RH. Expand short names (LC = Toyota Land Cruiser, Patrol = Nissan Patrol). Never invent a year or model. Write items in English.`,
-      messages: [{ role: "user", content: msg }],
-    });
-    const m = r.content.map(c => c.text || "").join("").match(/\{[\s\S]*\}/);
-    const items = m ? (JSON.parse(m[0]).items || []).filter(i => i && i.part) : [];
-    res.json({ items });
+    res.json(await readMessage(msg));
   } catch (err) {
     console.error("[ai]", err.message);
     res.status(502).json({ error: "Could not read the message. Add items by hand." });

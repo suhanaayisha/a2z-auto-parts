@@ -16,17 +16,19 @@ const viewInvoice = (req, x) => out(x);
 
 // ---------- everything the screens need in one call ----------
 records.get("/bootstrap", async (req, res) => {
-  const [company, customers, enquiries, invoices, credits] = await Promise.all([
+  const [company, customers, enquiries, invoices, credits, waReview] = await Promise.all([
     col.settings.findOne({ _id: "company" }),
     col.customers.find({}).toArray(),
     col.enquiries.find({}).toArray(),
     col.invoices.find({}).toArray(),
     col.credits.find({}).toArray(),
+    col.wa_batches.countDocuments({ status: { $in: ["review", "failed"] } }),
   ]);
   const co = out(company) || { name: "", salespeople: [], quoteValidDays: 7, payDays: 0 };
   res.json({
     me: { id: req.user._id, name: req.user.name, email: req.user.email },
     config: { ai: !!process.env.ANTHROPIC_API_KEY },
+    waReview,
     company: co,
     customers: customers.map(out),
     enquiries: enquiries.map(e => viewEnquiry(req, e)),
@@ -106,12 +108,20 @@ function cleanEnquiry(b) {
 }
 async function invoicesOf(id) { return col.invoices.find({ enquiryId: id }).toArray(); }
 
-records.post("/enquiries", async (req, res) => {
-  const e = cleanEnquiry(req.body || {});
-  if (!e.customerId || !(await col.customers.findOne({ _id: e.customerId }))) return res.status(400).json({ error: "Choose the workshop first." });
-  const doc = Object.assign({ _id: uid("e"), enqNo: await nextSeq("enqNo"), status: "new", createdAt: now(), createdBy: req.user._id,
-    quoteNo: null, quoteRev: 1, quoteDate: null, confirmDate: null }, e);
+// Creates an enquiry. Also used by the WhatsApp worker, so it returns null instead of answering a request.
+// extra: fields the screens can't set, e.g. { source: "whatsapp", waBatchId }.
+export async function createEnquiry(input, createdBy, extra = {}) {
+  const e = cleanEnquiry(input || {});
+  if (!e.customerId || !(await col.customers.findOne({ _id: e.customerId }))) return null;
+  const doc = Object.assign({ _id: uid("e"), enqNo: await nextSeq("enqNo"), status: "new", createdAt: now(), createdBy,
+    quoteNo: null, quoteRev: 1, quoteDate: null, confirmDate: null }, e, extra);
   await col.enquiries.insertOne(doc);
+  return doc;
+}
+
+records.post("/enquiries", async (req, res) => {
+  const doc = await createEnquiry(req.body, req.user._id);
+  if (!doc) return res.status(400).json({ error: "Choose the workshop first." });
   res.status(201).json({ enquiry: viewEnquiry(req, doc) });
 });
 

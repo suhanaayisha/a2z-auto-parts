@@ -11,7 +11,7 @@ export default function EnqRow({ e }) {
   const name = customers.find(x => x.id === e.customerId)?.name || "Unknown workshop";
   return (
     <Link className="li" href={`/enquiries/${e.id}`}>
-      <span className="no">{enqNo(e)}</span><span className="who">{name}<SampleChip on={e.sample} /></span>
+      <span className="no">{enqNo(e)}</span><span className="who">{name}<SampleChip on={e.sample} />{e.source === "whatsapp" ? <span className="small faint"> · via WhatsApp</span> : null}</span>
       <span className="rt"><Pill s={e.status}>{STATUS[e.status]}</Pill>
         {e.status === "new" ? <span className="age" data-t={a.t}>{a.s}</span> : <span className="amt">{c.total ? money(c.total) : "–"}</span>}</span>
       <span className="what" style={{ gridColumn: "1/3" }}>{vehicles(e) || "Vehicle not set"} · {items} item{items === 1 ? "" : "s"}{parts ? ": " + parts : ""}</span>

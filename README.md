@@ -4,7 +4,8 @@ Enquiries, quotes, invoices and credit notes for a used auto parts business in t
 
 - **web/**: the screens (Next.js and React), plus `web/server.mjs`, which runs the whole app
 - **api/**: the API (Node.js and Express) that stores everything in **MongoDB**
-- **render.yaml**: sets it up on **Render** as one service
+- **wa/**: the optional WhatsApp listener and worker, which turn parts requests from WhatsApp into enquiries (see **WhatsApp intake**)
+- **render.yaml**: sets it up on **Render**: the web service, plus the WhatsApp service if you use it
 
 `web/server.mjs` runs both in one process: requests to `/api/...` and `/healthz` go to the API, and everything else goes to the screens. The browser only talks to one site, so the login cookie stays secure.
 
@@ -51,6 +52,46 @@ Create a **private** repository and push this folder to it.
 **Plan:** `render.yaml` uses Render's **Starter** plan ($7/month), which never sleeps. To try it for free, change it to `plan: free`; free services go to sleep after 15 minutes without use and take about a minute to wake.
 
 **Own domain (optional):** in **a2z-auto-parts-web → Settings → Custom Domains**, add e.g. `app.yourcompany.ae` and follow Render's DNS steps.
+
+## WhatsApp intake (optional)
+
+Reads the business WhatsApp and turns parts requests into enquiries, so nobody has to paste messages by hand.
+
+**How it works**
+
+1. **Listener** (`wa/src/listener.js`). Joins WhatsApp as a linked device, like WhatsApp Web, using [Baileys](https://github.com/WhiskeySockets/Baileys). It saves every incoming message, photo and voice note to MongoDB. It **only reads**: it never sends, reacts or marks chats as read. Its login is kept in MongoDB, so deploys don't unlink it.
+2. **Batching.** Messages from one chat that arrive close together (text, then a photo, then a voice note) are read together. A chat's batch is read once it has been quiet for 90 seconds, or 10 minutes after its first message at the latest.
+3. **Worker** (`api/src/wa/processor.js`). Transcribes voice notes (OpenAI Whisper, or Deepgram), then sends the text, transcripts and up to 6 photos to Claude. Claude decides whether it's a parts request, a reply to a quote or something else, and lists the items with a confidence score.
+4. **Enquiry or review.**
+   - It becomes an enquiry by itself, marked "via WhatsApp", with the photos and the original messages attached, when all of these hold:
+     - the chat belongs to a known workshop;
+     - it is a parts request;
+     - Claude is at least 85% sure (`WA_AUTO_CONFIDENCE`).
+   - Anything else waits in the new **WhatsApp** tab. There you can fix the items, pick the workshop and press **Create enquiry**, or **Set aside**.
+   - Replies to quotes and chit-chat are set aside, not turned into enquiries.
+5. **Matching chats to workshops.** A chat matches a workshop by its **WhatsApp group name** (Customers → Edit, exactly as the group is named; separate several with commas). A direct chat matches by the workshop's **phone number**. When you pick a workshop for an unmatched chat in the WhatsApp tab, the app remembers it.
+6. **Records.** Raw messages are kept in `wa_messages`, and voice notes in `wa_media`. Photos are kept in `photos`, alongside the ones uploaded in the app. Every automatic and manual decision is logged in `wa_audit`. MongoDB is the queue (`wa_batches`): each batch is claimed atomically, retried up to 3 times, then shown as "Couldn't read".
+
+**Set it up**
+
+1. In Render, the Blueprint now also shows **a2z-whatsapp** (a background worker, Starter plan, $7/month). Fill in:
+   - `MONGODB_URI`: the same value as the web service.
+   - `ANTHROPIC_API_KEY`.
+   - `OPENAI_API_KEY` for voice notes, or `DEEPGRAM_API_KEY`.
+2. Open the app → **WhatsApp**. When the service is running, it shows a QR code. On the business phone, go to WhatsApp → **Settings → Linked devices → Link a device** and scan it.
+3. Under **Customers**, fill in each workshop's **WhatsApp group name** (and phone number for direct chats).
+4. Watch the WhatsApp tab for a few days. If what it creates by itself looks right, keep 0.85. To check everything by hand, set `WA_AUTO_CONFIDENCE` to `off`.
+
+**Be aware**
+
+- Baileys is **not an official WhatsApp product**. WhatsApp can restrict numbers that use unofficial clients.
+  - Reading only (as here) is much lower risk than sending, but it is not zero.
+  - Keep the phone itself in normal use, and don't run two copies of the service.
+  - If the number matters a lot to the business, keep a backup way for workshops to reach you.
+- Messages, photos and voice notes from workshops go to Anthropic (Claude) and to OpenAI or Deepgram for reading. Tell workshops if your terms require it.
+- If the phone unlinks the device, the WhatsApp tab shows a new QR code to scan. Messages that arrive while the service is off are picked up when it reconnects, for up to 3 days.
+
+**Run it on your computer:** `cd wa && npm install && npm run dev`. It reads `api/.env` and shows the QR code in the app's WhatsApp tab at http://localhost:3000/whatsapp.
 
 ## Run on your computer
 
@@ -100,5 +141,8 @@ The UAE e-invoicing mandate applies to B2B invoices from **1 July 2027** for bus
 | PATCH | /api/invoices/:id/commission | signed in | commission paid |
 | POST/GET | /api/photos | signed in | photos |
 | POST | /api/ai/read | signed in | read a WhatsApp message into items (optional) |
+| GET | /api/wa/status, /api/wa/inbox?view= | signed in | WhatsApp connection, QR code, and read messages |
+| POST | /api/wa/batches/:id/accept, /dismiss, /retry | signed in | make a WhatsApp request an enquiry, set it aside, read it again |
+| GET | /api/wa/batches/:id/audit, /api/wa/media/:id | signed in | decision log, voice notes |
 | GET/POST | /api/export, /api/import, /api/sample/clear | signed in | backups and sample data |
 | GET/PATCH/POST | /api/team | signed in | approve people, turn accounts off, reset passwords |

@@ -23,3 +23,29 @@ services:
         sync: false      # a random string of 32+ characters. Changing it signs everyone out.
       - key: ANTHROPIC_API_KEY
         sync: false      # optional: turns on "Read message into items". Leave empty to skip.
+
+  # WhatsApp intake (optional): reads the business WhatsApp and turns parts requests into enquiries.
+  # Runs apart from the web service so a website deploy doesn't drop the WhatsApp connection. Keep it at one instance.
+  - type: worker
+    name: a2z-whatsapp
+    runtime: node
+    plan: starter        # $7/month. Background workers have no free plan.
+    region: frankfurt
+    buildCommand: cd wa && npm run build   # also installs ../api's packages, which it shares
+    startCommand: cd wa && npm start
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false      # the same Atlas connection string as the web service
+      - key: MONGODB_DB
+        value: partsdesk
+      - key: ANTHROPIC_API_KEY
+        sync: false      # reads messages and photos. Without it, everything waits in the WhatsApp tab.
+      - key: OPENAI_API_KEY
+        sync: false      # voice notes (Whisper). Or set DEEPGRAM_API_KEY instead.
+      - key: WA_AUTO_CONFIDENCE
+        value: "0.85"    # how sure the reader must be to create an enquiry by itself; "off" sends everything to review
+      - key: WA_CHATS
+        value: all       # "groups" ignores direct chats

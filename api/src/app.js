@@ -6,6 +6,7 @@ import { loadUser, requireUser, authRoutes, teamRoutes } from "./auth.js";
 import { records } from "./routes/records.js";
 import { invoices } from "./routes/invoices.js";
 import { extras } from "./routes/extras.js";
+import { wa } from "./routes/wa.js";
 
 export function createApi() {
   const app = express();
@@ -27,7 +28,7 @@ export function createApi() {
   app.use("/api", loadUser);
   app.use("/api/auth", authRoutes);
   app.use("/api/team", teamRoutes);
-  app.use("/api", requireUser, records, invoices, extras);
+  app.use("/api", requireUser, records, invoices, extras, wa);
   app.use("/api", (req, res) => res.status(404).json({ error: "Not found." }));
 
   app.use((err, req, res, next) => {

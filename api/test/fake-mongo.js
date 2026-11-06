@@ -12,16 +12,20 @@ function matches(doc, filter = {}) {
         if (op === "$exists") return arg ? v !== undefined : v === undefined;
         if (op === "$gt") return v > arg;
         if (op === "$lt") return v < arg;
+        if (op === "$gte") return v >= arg;
+        if (op === "$lte") return v <= arg;
+        if (op === "$nin") return !arg.includes(v);
         throw new Error("fake-mongo: unsupported operator " + op);
       });
     }
     return v === cond;
   });
 }
-function applyUpdate(doc, update) {
+function applyUpdate(doc, update, inserting = false) {
   for (const [op, fields] of Object.entries(update)) {
     for (const [k, val] of Object.entries(fields)) {
-      if (op === "$set") doc[k] = clone(val);
+      if (op === "$setOnInsert") { if (inserting) doc[k] = clone(val); }
+      else if (op === "$set") doc[k] = clone(val);
       else if (op === "$inc") doc[k] = (doc[k] || 0) + val;
       else if (op === "$push") (doc[k] = doc[k] || []).push(clone(val));
       else if (op === "$unset") delete doc[k];
@@ -66,14 +70,20 @@ function collection(store, uniques) {
     },
     async updateOne(filter, update, opts = {}) {
       let d = store.find(x => matches(x, filter));
+      const inserting = !d;
       if (!d) { if (!opts.upsert) return { matchedCount: 0 }; d = Object.assign({}, filter); store.push(d); }
-      applyUpdate(d, update); return { matchedCount: 1 };
+      applyUpdate(d, update, inserting); return { matchedCount: 1 };
+    },
+    async updateMany(filter, update) {
+      const rows = store.filter(x => matches(x, filter));
+      rows.forEach(d => applyUpdate(d, update)); return { matchedCount: rows.length };
     },
     async findOneAndUpdate(filter, update, opts = {}) {
       let d = store.find(x => matches(x, filter));
       const before = d ? clone(d) : null;
-      if (!d) { if (!opts.upsert) return null; d = Object.assign({}, filter); store.push(d); }
-      applyUpdate(d, update);
+      const inserting = !d;
+      if (!d) { if (!opts.upsert) return null; d = Object.fromEntries(Object.entries(filter).filter(([, v]) => !(v && typeof v === "object"))); store.push(d); }
+      applyUpdate(d, update, inserting);
       return opts.returnDocument === "after" ? clone(d) : before;
     },
     async deleteOne(filter) { const i = store.findIndex(x => matches(x, filter)); if (i >= 0) store.splice(i, 1); return { deletedCount: i >= 0 ? 1 : 0 }; },
