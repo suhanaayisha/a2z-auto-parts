@@ -119,7 +119,7 @@ To bring records across from the A2Z Auto Parts page in Claude, ask Claude for a
 Keep every invoice and credit note for at least 7 years (the Corporate Tax record rule). Each month:
 - **Settings → Export invoices and credit notes (CSV)**
 - **Settings → Download full backup (JSON)**
-- save the month's invoice PDFs
+- Save the month's invoice PDFs
 
 MongoDB Atlas paid tiers also offer automatic backups.
 
