@@ -21,8 +21,8 @@ export async function connect(uri = process.env.MONGODB_URI, dbName = process.en
     col[name] = db.collection(name);
   }
   // WhatsApp intake (see README → WhatsApp intake): raw messages, batches waiting to be read, chats, voice notes, audit log,
-  // the linked device's login (wa_auth), the listener's status (wa_state) and the team's price messages (wa_prices).
-  for (const name of ["wa_messages", "wa_batches", "wa_chats", "wa_media", "wa_audit", "wa_auth", "wa_state", "wa_prices"]) {
+  // the linked device's login (wa_auth), the listener's status (wa_state) the team's price messages (wa_prices) and quotes sent from the app (wa_outbox).
+  for (const name of ["wa_messages", "wa_batches", "wa_chats", "wa_media", "wa_audit", "wa_auth", "wa_state", "wa_prices", "wa_outbox"]) {
     col[name] = db.collection(name);
   }
   await Promise.all([
@@ -37,6 +37,7 @@ export async function connect(uri = process.env.MONGODB_URI, dbName = process.en
     col.wa_audit.createIndex({ batchId: 1 }),
     col.wa_prices.createIndex({ status: 1, nextAt: 1 }),
     col.wa_prices.createIndex({ messageId: 1 }),
+    col.wa_outbox.createIndex({ status: 1, createdAt: 1 }),
   ]);
   return db;
 }

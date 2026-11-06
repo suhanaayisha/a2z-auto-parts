@@ -79,7 +79,7 @@ export async function ingestMessage(m) {
 
   const doc = {
     _id: m.id, chat: m.chat, batchId: batch._id, sender: m.sender || "", senderName: m.senderName || "", ts: m.ts,
-    type: m.type, text: shown, body, quotedId, photoId, mediaId, transcript: null, note, receivedAt: now,
+    participant: m.participant || null, type: m.type, text: shown, body, quotedId, photoId, mediaId, transcript: null, note, receivedAt: now,
   };
   await col.wa_messages.insertOne(doc);
   return doc;

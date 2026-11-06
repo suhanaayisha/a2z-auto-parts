@@ -7,8 +7,9 @@ const role = process.env.WA_ROLE || "all";
 await connect();
 
 if (role === "all" || role === "listener") {
-  const { startListener, heartbeat } = await import("./listener.js");
+  const { startListener, heartbeat, startOutbox } = await import("./listener.js");
   heartbeat();
+  startOutbox();
   await startListener();
   console.log("[wa] listener started");
 }

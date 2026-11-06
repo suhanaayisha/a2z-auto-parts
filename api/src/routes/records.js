@@ -51,9 +51,18 @@ records.put("/settings/company", async (req, res) => {
     vatRegistered: false, updatedAt: now(),
   };
   // The team's WhatsApp numbers are saved on their own (below), so keep them as they are.
-  co.teamNumbers = (await col.settings.findOne({ _id: "company" }))?.teamNumbers || [];
+  const prev = await col.settings.findOne({ _id: "company" });
+  co.teamNumbers = prev?.teamNumbers || [];
+  if (prev && "waSending" in prev) co.waSending = prev.waSending;
   await col.settings.replaceOne({ _id: "company" }, co, { upsert: true });
   res.json({ company: Object.assign({ id: "company" }, co) });
+});
+
+// Whether the team can send quotes to WhatsApp from the app (on unless turned off).
+records.put("/settings/whatsapp", async (req, res) => {
+  await col.settings.updateOne({ _id: "company" }, { $set: { waSending: !!req.body?.sending } }, { upsert: true });
+  const co = await col.settings.findOne({ _id: "company" });
+  res.json({ company: Object.assign({ id: "company" }, (({ _id, ...rest }) => rest)(co)) });
 });
 
 // WhatsApp numbers the team sends from. Their messages are never read as parts requests.

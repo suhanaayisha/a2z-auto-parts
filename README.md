@@ -59,7 +59,7 @@ Reads the business WhatsApp and turns parts requests into enquiries, so nobody h
 
 **How it works**
 
-1. **Listener** (`wa/src/listener.js`). Joins WhatsApp as a linked device, like WhatsApp Web, using [Baileys](https://github.com/WhiskeySockets/Baileys). It saves every incoming message, photo and voice note to MongoDB. It **only reads**: it never sends, reacts or marks chats as read. Its login is kept in MongoDB, so deploys don't unlink it.
+1. **Listener** (`wa/src/listener.js`). Joins WhatsApp as a linked device, like WhatsApp Web, using [Baileys](https://github.com/WhiskeySockets/Baileys). It saves every incoming message, photo and voice note to MongoDB. It reads every message, and sends only the quotes your team sends from the app (see 8). It never reacts, and never marks chats as read. Its login is kept in MongoDB, so deploys don't unlink it.
 2. **Batching.** Messages from one chat that arrive close together (text, then a photo, then a voice note) are read together. A chat's batch is read once it has been quiet for 90 seconds, or 10 minutes after its first message at the latest.
 3. **Worker** (`api/src/wa/processor.js`). Transcribes voice notes (OpenAI Whisper, or Deepgram), then sends the text, transcripts and up to 6 photos to Claude. Claude decides whether it's a parts request, a reply to a quote or something else, and lists the items with a confidence score.
 4. **Enquiry or review.**
@@ -82,8 +82,20 @@ Reads the business WhatsApp and turns parts requests into enquiries, so nobody h
      - Applying fills in the selling prices and adds notes such as "NEED SAMPLE".
      - If every item then has a price, the quote is created, or revised if one already exists. Cost prices are still entered by hand.
    - **When the workshop answers the prices** ("OK", "1A 2B"), their reply is shown on the enquiry, ready for someone to confirm it.
-8. **Matching chats to workshops.** A chat matches a workshop by its **WhatsApp group name** (Customers → Edit, exactly as the group is named; separate several with commas). A direct chat matches by the workshop's **phone number**. When you pick a workshop for an unmatched chat in the WhatsApp tab, the app remembers it.
-9. **Records.** Raw messages are kept in `wa_messages`, and voice notes in `wa_media`. Photos are kept in `photos`, alongside the ones uploaded in the app. The team's price messages are kept in `wa_prices`. Every automatic and manual decision is logged in `wa_audit`. MongoDB is the queue (`wa_batches`): each batch is claimed atomically, retried up to 3 times, then shown as "Couldn't read".
+8. **Sending quotes from the app.** On a quoted enquiry, **Send to WhatsApp** shows the quote as an editable message, then posts it from the linked number.
+   - **Where it goes:**
+     - An enquiry that came from WhatsApp gets the quote as a reply to the workshop's original request.
+     - An enquiry typed in by hand gets it in the workshop's group, matched by its WhatsApp group name.
+   - **Tracking:**
+     - The enquiry shows "Sent to WhatsApp" with the time, or why it wasn't sent.
+     - The workshop's reply to the quote ("OK", "1A 2B") is shown on the enquiry.
+   - **Safeguards:**
+     - Messages go out one at a time, only while WhatsApp is connected.
+     - A message that can't go out within 15 minutes is cancelled rather than sent late.
+     - If the service restarts mid-send, the message is marked "not sure it was sent" instead of being sent twice.
+   - **Turning it off:** use **Settings → WhatsApp**. **Copy** always works as a fallback.
+9. **Matching chats to workshops.** A chat matches a workshop by its **WhatsApp group name** (Customers → Edit, exactly as the group is named; separate several with commas). A direct chat matches by the workshop's **phone number**. When you pick a workshop for an unmatched chat in the WhatsApp tab, the app remembers it.
+10. **Records.** Raw messages are kept in `wa_messages`, and voice notes in `wa_media`. Photos are kept in `photos`, alongside the ones uploaded in the app. The team's price messages are kept in `wa_prices`, and quotes sent from the app in `wa_outbox`. Every automatic and manual decision is logged in `wa_audit`. MongoDB is the queue (`wa_batches`): each batch is claimed atomically, retried up to 3 times, then shown as "Couldn't read".
 
 **Set it up**
 

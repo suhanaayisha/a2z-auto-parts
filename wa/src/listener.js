@@ -1,5 +1,5 @@
 // Listens to WhatsApp as a linked device (like WhatsApp Web) and saves every incoming message.
-// It only reads: it never sends, reacts or marks messages as read.
+// It reads every message, and sends only quotes the team sends from the app (wa_outbox). It never reacts or marks messages as read.
 import makeWASocket, {
   Browsers, DisconnectReason, downloadMediaMessage, fetchLatestBaileysVersion, getContentType,
   isJidBroadcast, isJidGroup, isJidStatusBroadcast, makeCacheableSignalKeyStore, normalizeMessageContent,
@@ -8,6 +8,7 @@ import pino from "pino";
 import QRCode from "qrcode";
 import { col } from "../../api/src/db.js";
 import { ingestMessage } from "../../api/src/wa/ingest.js";
+import { processOutbox, recoverStuckSends } from "../../api/src/wa/outbox.js";
 import { useMongoAuthState } from "./auth-state.js";
 
 const logger = pino({ level: process.env.WA_LOG_LEVEL || "warn" });
@@ -73,7 +74,8 @@ async function handle(sock, msg) {
   const sender = group ? pn(k.participant, k.participantAlt) : chat;
   const saved = await ingestMessage({
     id: k.id, chat, chatName: await chatName(sock, k.remoteJid, msg.pushName), isGroup: !!group,
-    sender, senderName: msg.pushName || "", ts: ts.toISOString(), type, text, quoted, media,
+    sender, participant: group ? k.participant || undefined : undefined, // as WhatsApp addresses them, needed to reply to their message
+    senderName: msg.pushName || "", ts: ts.toISOString(), type, text, quoted, media,
   });
   if (saved) logger.info({ chat, type }, "saved");
 }
@@ -102,10 +104,12 @@ export async function startListener() {
   sock.ev.on("connection.update", async u => {
     if (u.qr) await saveState({ connection: "qr", qr: await QRCode.toDataURL(u.qr, { margin: 1, width: 280 }), error: null });
     if (u.connection === "open") {
+      current = sock;
       await saveState({ connection: "open", qr: null, error: null, me: { id: sock.user?.id || "", name: sock.user?.name || "" } });
       console.log("[wa] connected as", sock.user?.id);
     }
     if (u.connection === "close") {
+      if (current === sock) current = null;
       const code = u.lastDisconnect?.error?.output?.statusCode;
       if (code === DisconnectReason.loggedOut) {
         // Unlinked from the phone: forget the login and show a fresh QR code.
@@ -122,6 +126,27 @@ export async function startListener() {
   });
 
   return sock;
+}
+
+// ---------- quotes sent from the app (wa_outbox) ----------
+// One message every few seconds at most, only while connected. Replies quote the workshop's original message.
+let current = null;
+async function sendJob(job) {
+  const opts = job.quoted?.id ? { quoted: {
+    key: { remoteJid: job.chat, id: job.quoted.id, fromMe: false, ...(job.quoted.participant ? { participant: job.quoted.participant } : {}) },
+    message: { conversation: job.quoted.text || "" },
+  } } : undefined;
+  const sent = await current.sendMessage(job.chat, { text: job.text }, opts);
+  return sent?.key?.id || null;
+}
+export function startOutbox(everyMs = 4000) {
+  let busy = false;
+  recoverStuckSends().catch(() => {});
+  return setInterval(async () => {
+    if (busy || !current) return;
+    busy = true;
+    try { await processOutbox(sendJob); } catch (err) { console.error("[wa] outbox:", err.message); } finally { busy = false; }
+  }, everyMs);
 }
 
 // Tells the app the listener is alive, even when nothing is arriving.

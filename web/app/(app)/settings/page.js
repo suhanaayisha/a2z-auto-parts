@@ -78,9 +78,9 @@ function TeamNumbers() {
   }
   const cancel = () => { setText(saved); setEditing(false); };
   return (
-    <section className="panel"><div className="hd"><h2>Our team&apos;s WhatsApp numbers</h2><span className="small faint">Used by the WhatsApp tab</span></div>
+    <section className="panel"><div className="hd"><h2>WhatsApp</h2><span className="small faint">Used by the WhatsApp tab</span></div>
       <form className="bd" onSubmit={save} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <label className="field"><span>One number per line, with the country code</span>
+        <label className="field"><span>Our team&apos;s WhatsApp numbers: one per line, with the country code</span>
           <textarea rows={3} value={text} onChange={e => setText(e.target.value)} disabled={!editing} placeholder={"+971 50 123 4567\n+971 55 765 4321"} /></label>
         <p className="small faint" style={{ margin: 0 }}>Messages from these numbers in workshop groups, such as prices your salespeople send, are never read as parts requests. The linked WhatsApp phone is ignored already.</p>
         <div className="row">
@@ -89,9 +89,22 @@ function TeamNumbers() {
             {saved && <button key="cancel" className="btn" type="button" onClick={cancel} disabled={busy}>Cancel</button>}
           </> : <button key="edit" className="btn" type="button" onClick={() => setEditing(true)}>Edit numbers</button>}
         </div>
+        <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 4 }}><SendToggle /></div>
       </form>
     </section>
   );
+}
+
+function SendToggle() {
+  const { company, setCompany, toast } = useApp();
+  const on = company.waSending !== false;
+  async function flip() {
+    try { const r = await api("PUT", "/settings/whatsapp", { sending: !on }); setCompany(r.company); toast(!on ? "Sending from the app is on" : "Sending from the app is off"); }
+    catch (e) { toast(e.message); }
+  }
+  return <label className="row small" style={{ gap: 8, cursor: "pointer" }}>
+    <input type="checkbox" checked={on} onChange={flip} /> Let the team send quotes to WhatsApp from the app (the Send to WhatsApp button on quoted enquiries). Saves straight away.
+  </label>;
 }
 
 function Team() {

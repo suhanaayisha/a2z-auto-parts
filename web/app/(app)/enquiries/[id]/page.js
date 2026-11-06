@@ -112,6 +112,10 @@ function Editor() {
     const text = cur.quoteNo ? quoteText(cur, company) : `✅ ${enqNo(cur)} received – ${(cur.items || []).length} item(s). We'll send prices shortly.`;
     try { await navigator.clipboard.writeText(text); toast("Copied. Paste it into the WhatsApp group"); } catch { toast("Copying isn't allowed here. Open the quote and select the text."); }
   }
+  async function sendWA() {
+    const cur = await saved(); if (!cur) return;
+    open(<SendDialog e={cur} text={quoteText(cur, company)} />);
+  }
   async function deliverAll() {
     const now = new Date().toISOString();
     const next = clone(e); next.items.forEach(i => { if (optOf(i) && !i.delivered) { i.delivered = true; i.deliveredDate = now; } });
@@ -137,6 +141,8 @@ function Editor() {
   const refs = [
     e.quoteNo && <span key="q">Quote <b>{qtNo(e)}</b> {fmtDate(e.quoteDate)}</span>,
     e.confirmDate && <span key="c">Confirmed {fmtDate(e.confirmDate)}</span>,
+    e.waSent && <span key="w" className="dchip" data-t={{ sent: "done", failed: "crit" }[e.waSent.status] || "ok"} title={e.waSent.error || ""}>
+      {e.waSent.status === "sent" ? `Sent to WhatsApp ${fmtDT(e.waSent.sentAt)}` : e.waSent.status === "failed" ? "Not sent to WhatsApp" : "Sending to WhatsApp…"}</span>,
     ...myInv.map(x => <button key={x.id} className="btn sm ghost" type="button" onClick={() => open(<DocView kind="invoice" id={x.id} wide />)}><b>{invNo(x)}</b>&nbsp;<Pill s={invState(x).t}>{invState(x).l}</Pill></button>),
   ].filter(Boolean);
 
@@ -152,6 +158,7 @@ function Editor() {
       <div className="bd" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {L ? <div className="lockline">Fully invoiced, so prices are locked. Delivery can still be updated. To change an invoice, open it and cancel it with a credit note.</div>
           : hasLive ? <div className="lockline">Part invoiced. Invoiced items are locked; the rest can still be changed and invoiced later.</div> : null}
+        {e.waSent?.status === "failed" && <div className="banner">{e.waSent.error || "The quote wasn't sent to WhatsApp."} You can press Send to WhatsApp again, or use Copy.</div>}
         {e.waReply && ["new", "quoted"].includes(st) && <div className="banner" data-tone="info">
           <b>{e.waReply.by || "The workshop"} replied on WhatsApp</b> ({fmtDT(e.waReply.at)}): &ldquo;{e.waReply.text}&rdquo;
           {st === "quoted" && <> · If they accepted, tick the options they chose and press Workshop confirmed.</>}</div>}
@@ -202,6 +209,7 @@ function Editor() {
       <div className="actions">
         <button className={"btn" + (dirty ? " primary" : "")} type="button" onClick={() => save()} disabled={busy === "save"}>{busy === "save" ? "Saving…" : dirty ? "Save changes" : "Saved"}</button>
         {!isNew && <button className="btn sm ghost" type="button" onClick={copyWA}>Copy for WhatsApp</button>}
+        {!isNew && e.quoteNo && company.waSending !== false && <button className="btn sm" type="button" onClick={sendWA}>Send to WhatsApp</button>}
         <span className="sp" />
         {d && !d.done && <button className="btn" type="button" onClick={deliverAll}>Mark all delivered</button>}
         {st === "new" && <button className="btn primary" type="button" disabled={!!busy} onClick={() => { if (!isPriced(e)) { toast("Add a unit price to every option first"); return; } action("quote", showQuote); }}>Create quote</button>}
@@ -220,6 +228,45 @@ function Editor() {
         {!e.quoteNo && <button className="btn ghost danger sm" type="button" onClick={() => isNew ? del() : confirmDialog(`Delete ${enqNo(e)}?`, <p style={{ margin: 0 }}>This enquiry has no quote yet. Deleting it cannot be undone.</p>, "Delete", del, true)}>{isNew ? "Discard" : "Delete"}</button>}
       </div>
     </section>
+  </>);
+}
+
+// Preview, edit and send the quote to the workshop's WhatsApp group, as a reply to their request.
+function SendDialog({ e, text: initial }) {
+  const app = useApp();
+  const [text, setText] = useState(initial);
+  const [info, setInfo] = useState(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { api("GET", `/wa/enquiries/${e.id}/send-target`).then(setInfo).catch(err => setInfo({ error: err.message })); }, [e.id]);
+  const t = info?.target;
+  const blocked = !info || info.error || !t || !info.connected || !info.enabled;
+  async function send() {
+    setBusy(true);
+    try {
+      const r = await api("POST", `/wa/enquiries/${e.id}/send`, { text });
+      app.upsert("enquiries", r.enquiry); app.close(); app.toast("Sending to WhatsApp…");
+      setTimeout(app.load, 6000); setTimeout(app.load, 15000);
+    } catch (err) { app.toast(err.message); } finally { setBusy(false); }
+  }
+  async function copy() {
+    try { await navigator.clipboard.writeText(text); app.toast("Copied. Paste it into the WhatsApp group"); app.close(); }
+    catch { app.toast("Copying isn't allowed here. Select the text and copy it."); }
+  }
+  return (<>
+    <div className="dh"><h2>Send {qtNo(e)} to WhatsApp</h2><button className="btn ghost sm" onClick={app.close} aria-label="Close">✕</button></div>
+    <div className="db" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {!info ? <span className="small faint">Checking where it goes…</span>
+        : info.error ? <div className="banner">{info.error}</div>
+        : !t ? <div className="banner">This workshop has no WhatsApp chat yet. Add its WhatsApp group name under Customers, or use Copy.</div>
+        : <div className="small">To <b>{t.chatName || "the workshop's chat"}</b>{t.quoted ? <> as a reply to {t.quoted.by || "their"} message: <span className="faint">&ldquo;{t.quoted.text.length > 90 ? t.quoted.text.slice(0, 90) + "…" : t.quoted.text}&rdquo;</span></> : ""}</div>}
+      {info && !info.error && !info.connected && <div className="banner">WhatsApp isn&apos;t connected right now, so it can&apos;t be sent. Check the WhatsApp tab, or use Copy.</div>}
+      {info && !info.error && !info.enabled && <div className="banner">Sending from the app is turned off in Settings. Use Copy.</div>}
+      {e.waSent?.status === "sent" && <div className="banner" data-tone="info">Already sent {fmtDT(e.waSent.sentAt)}. Sending again posts it a second time.</div>}
+      <label className="field"><span>Message (you can edit it)</span><textarea rows={12} value={text} onChange={ev => setText(ev.target.value)} className="mono" style={{ fontSize: 13 }} /></label>
+      <span className="small faint">Sent from the WhatsApp number linked in the WhatsApp tab.</span>
+    </div>
+    <div className="df"><button className="btn" onClick={copy}>Copy instead</button>
+      <button className="btn primary" disabled={busy || blocked || !text.trim()} onClick={send}>{busy ? "Sending…" : "Send"}</button></div>
   </>);
 }
 

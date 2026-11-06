@@ -5,6 +5,7 @@ import { col, out } from "../db.js";
 import { enquiryFromBatch, linkChat, findCustomer } from "../wa/processor.js";
 import { audit } from "../wa/ingest.js";
 import { applyPrices, dismissPrices } from "../wa/prices.js";
+import { sendTarget, queueSend, listenerConnected, sendingEnabled } from "../wa/outbox.js";
 
 export const wa = Router();
 
@@ -137,4 +138,27 @@ wa.post("/wa/prices/:id/ignore", async (req, res) => {
   if (!r.matchedCount) return res.status(400).json({ error: "This one can't be set aside now." });
   await audit(req.params.id, "prices_ignored", req.user._id);
   res.json({ ok: true });
+});
+
+// ---------- sending quotes from the app (see wa/outbox.js) ----------
+// What the Send dialog shows: where it goes, which message it replies to, and whether it can go now.
+wa.get("/wa/enquiries/:id/send-target", async (req, res) => {
+  const e = await col.enquiries.findOne({ _id: req.params.id });
+  if (!e) return res.status(404).json({ error: "Enquiry not found." });
+  const co = await col.settings.findOne({ _id: "company" });
+  res.json({ target: await sendTarget(e), enabled: sendingEnabled(co), connected: await listenerConnected() });
+});
+
+wa.post("/wa/enquiries/:id/send", async (req, res) => {
+  const e = await col.enquiries.findOne({ _id: req.params.id });
+  if (!e) return res.status(404).json({ error: "Enquiry not found." });
+  if (!sendingEnabled(await col.settings.findOne({ _id: "company" }))) return res.status(403).json({ error: "Sending from the app is turned off in Settings. Use Copy instead." });
+  if (!e.quoteNo) return res.status(400).json({ error: "Create the quote first." });
+  const text = String(req.body?.text || "").trim().slice(0, 4000);
+  if (!text) return res.status(400).json({ error: "The message is empty." });
+  if (["queued", "sending"].includes(e.waSent?.status)) return res.status(409).json({ error: "This quote is already being sent." });
+  if (!(await listenerConnected())) return res.status(409).json({ error: "WhatsApp isn't connected right now. Check the WhatsApp tab, or use Copy." });
+  const r = await queueSend(e, text, req.user._id);
+  if (r.error) return res.status(r.status).json({ error: r.error });
+  res.status(202).json({ enquiry: out(r.enquiry) });
 });

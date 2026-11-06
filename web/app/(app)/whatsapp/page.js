@@ -65,7 +65,7 @@ function Connection({ s }) {
           <li>Go to <b>Settings → Linked devices → Link a device</b>.</li>
           <li>Point the phone at this code. It changes every few seconds; that's normal.</li>
         </ol>
-        <p className="small faint">The app only reads messages. It never sends anything or marks chats as read.</p>
+        <p className="small faint">The app reads messages. It sends only the quotes your team sends with Send to WhatsApp, and it never marks chats as read.</p>
         {s.error && <p className="small" style={{ color: "var(--warn)" }}>{s.error}</p>}
       </div>
     </div></section>);
