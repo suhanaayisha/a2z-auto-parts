@@ -53,11 +53,12 @@ async function handle(sock, msg) {
   const body = content[kind] || {};
   let text = typeof body === "string" ? body : body.text || body.caption || "";
   if (kind === "documentWithCaptionMessage") text = content.documentWithCaptionMessage?.message?.documentMessage?.caption || "";
-  const quoted = body.contextInfo?.quotedMessage;
-  if (quoted) {
-    const q = normalizeMessageContent(quoted), qk = getContentType(q), qb = q?.[qk];
-    const qt = typeof qb === "string" ? qb : qb?.text || qb?.caption || "";
-    if (qt) text = `(replying to: "${qt.slice(0, 200)}") ${text}`;
+  // A reply: keep which message it answers (its id links a salesperson's prices to the enquiry) and its text.
+  let quoted = null;
+  const ctx = body.contextInfo;
+  if (ctx?.quotedMessage || ctx?.stanzaId) {
+    const q = normalizeMessageContent(ctx.quotedMessage), qk = getContentType(q), qb = q?.[qk];
+    quoted = { id: ctx.stanzaId || null, text: String((typeof qb === "string" ? qb : qb?.text || qb?.caption) || "").slice(0, 300) };
   }
 
   let media;
@@ -72,7 +73,7 @@ async function handle(sock, msg) {
   const sender = group ? pn(k.participant, k.participantAlt) : chat;
   const saved = await ingestMessage({
     id: k.id, chat, chatName: await chatName(sock, k.remoteJid, msg.pushName), isGroup: !!group,
-    sender, senderName: msg.pushName || "", ts: ts.toISOString(), type, text, media,
+    sender, senderName: msg.pushName || "", ts: ts.toISOString(), type, text, quoted, media,
   });
   if (saved) logger.info({ chat, type }, "saved");
 }

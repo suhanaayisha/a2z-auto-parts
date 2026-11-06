@@ -71,8 +71,19 @@ Reads the business WhatsApp and turns parts requests into enquiries, so nobody h
    - Replies to quotes and chit-chat are set aside, not turned into enquiries.
 5. **Your own team's messages.** The linked phone's own messages are ignored. If salespeople reply in workshop groups from other numbers, list those numbers under **Settings → Your company → Our team's WhatsApp numbers**. Their messages are then kept for the record but never read as requests.
 6. **VINs.** A VIN in a message (17 characters) is looked up in the free US government decoder (NHTSA vPIC). The make, model, year and engine are given to the reader and written into the enquiry notes. If the decoder can't be reached, the model year is still read from the VIN itself and marked as "probably".
-7. **Matching chats to workshops.** A chat matches a workshop by its **WhatsApp group name** (Customers → Edit, exactly as the group is named; separate several with commas). A direct chat matches by the workshop's **phone number**. When you pick a workshop for an unmatched chat in the WhatsApp tab, the app remembers it.
-8. **Records.** Raw messages are kept in `wa_messages`, and voice notes in `wa_media`. Photos are kept in `photos`, alongside the ones uploaded in the app. Every automatic and manual decision is logged in `wa_audit`. MongoDB is the queue (`wa_batches`): each batch is claimed atomically, retried up to 3 times, then shown as "Couldn't read".
+7. **Prices your team sends in WhatsApp.** When a salesperson replies in a group with prices (from a number listed under Settings → Our team's WhatsApp numbers), the app finds the enquiry and Claude matches each price to its item.
+   - **Finding the enquiry:**
+     - A reply to the workshop's request is matched exactly.
+     - So is a reply to earlier prices for the same request, such as a revised price.
+     - Prices sent without replying are matched only when the group has a single open enquiry from the last 14 days.
+     - The rest wait under **WhatsApp → Prices to match**, where someone picks the enquiry.
+   - **On the enquiry:**
+     - The prices appear in a **Prices from WhatsApp** panel. Nothing changes until someone presses **Apply prices**.
+     - Applying fills in the selling prices and adds notes such as "NEED SAMPLE".
+     - If every item then has a price, the quote is created, or revised if one already exists. Cost prices are still entered by hand.
+   - **When the workshop answers the prices** ("OK", "1A 2B"), their reply is shown on the enquiry, ready for someone to confirm it.
+8. **Matching chats to workshops.** A chat matches a workshop by its **WhatsApp group name** (Customers → Edit, exactly as the group is named; separate several with commas). A direct chat matches by the workshop's **phone number**. When you pick a workshop for an unmatched chat in the WhatsApp tab, the app remembers it.
+9. **Records.** Raw messages are kept in `wa_messages`, and voice notes in `wa_media`. Photos are kept in `photos`, alongside the ones uploaded in the app. The team's price messages are kept in `wa_prices`. Every automatic and manual decision is logged in `wa_audit`. MongoDB is the queue (`wa_batches`): each batch is claimed atomically, retried up to 3 times, then shown as "Couldn't read".
 
 **Set it up**
 

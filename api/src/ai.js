@@ -70,3 +70,27 @@ export async function readChat({ transcript, images = [] }) {
   if (kind === "enquiry" && (!items.length || items.some(i => !i.vehicle))) confidence = Math.min(confidence, 0.6);
   return { kind, items, confidence, sender: String(j.sender || "").slice(0, 120), notes: String(j.notes || "").slice(0, 500) };
 }
+
+const PRICES_SYSTEM = `A used auto parts supplier in the UAE sent prices in a WhatsApp group in reply to a garage's parts request. Match the prices to the numbered items of the request. Reply with JSON only:
+{"isPrices":true,"lines":[{"item":1,"price":540,"note":""}],"extra":["lines of the message that match no item"],"confidence":0.0}
+- price: the selling price in AED for one unit, as written ("540", "AED 540", "2k" = 2000). null when the line has no price.
+- note: a short remark the supplier added for that item, e.g. "NEED SAMPLE", "not available", "original", "2 days". Empty if none.
+- Match by meaning, not exact words: "A.c blower assym" = "A.c blower assembly", "Alternantor" = "Alternator". Each item at most once; leave out items the message doesn't mention.
+- isPrices false when the message is a question, a greeting or chat with no prices.
+- Never invent a price. confidence = how sure you are every price is on the right item.`;
+
+// items: [{ vehicle, part, qty }] → { isPrices, lines: [{ item (1-based), price|null, note }], extra, confidence }
+export async function readPrices({ items, message }) {
+  const list = items.map((it, i) => `${i + 1}. ${[it.vehicle, it.part].filter(Boolean).join(" – ")} (qty ${it.qty || 1})`).join("\n");
+  const j = parse(await call(PRICES_SYSTEM, `Items:\n${list}\n\nSupplier's message:\n${message}`, 1200));
+  const seen = new Set();
+  const lines = (Array.isArray(j.lines) ? j.lines : []).map(l => ({
+    item: Math.round(Number(l?.item)), price: Number.isFinite(Number(l?.price)) && Number(l.price) > 0 ? Math.round(Number(l.price) * 100) / 100 : null,
+    note: String(l?.note || "").slice(0, 120),
+  })).filter(l => l.item >= 1 && l.item <= items.length && !seen.has(l.item) && seen.add(l.item) && (l.price || l.note));
+  return {
+    isPrices: !!j.isPrices && lines.length > 0, lines,
+    extra: (Array.isArray(j.extra) ? j.extra : []).map(x => String(x).slice(0, 200)).slice(0, 20),
+    confidence: Math.min(1, Math.max(0, Number(j.confidence) || 0)),
+  };
+}

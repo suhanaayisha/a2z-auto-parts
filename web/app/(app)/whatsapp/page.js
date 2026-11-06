@@ -6,7 +6,7 @@ import { useApp } from "@/components/Shell";
 import { api } from "@/lib/api";
 import { fmtDT, enqNo, n } from "@/lib/calc";
 
-const VIEWS = [["review", "To check"], ["waiting", "Being read"], ["created", "Made into enquiries"], ["ignored", "Set aside"]];
+const VIEWS = [["review", "To check"], ["prices", "Prices to match"], ["waiting", "Being read"], ["created", "Made into enquiries"], ["ignored", "Set aside"]];
 const KIND = { enquiry: "Parts request", quote_reply: "Reply to a quote", other: "Not a request" };
 const clone = v => JSON.parse(JSON.stringify(v));
 
@@ -18,8 +18,8 @@ export default function WhatsApp() {
 
   const load = useCallback(async () => {
     try {
-      const [s, i] = await Promise.all([api("GET", "/wa/status"), api("GET", `/wa/inbox?view=${view}`)]);
-      setStatus(s); setBatches(i.batches);
+      const [s, i] = await Promise.all([api("GET", "/wa/status"), view === "prices" ? api("GET", "/wa/prices") : api("GET", `/wa/inbox?view=${view}`)]);
+      setStatus(s); setBatches(view === "prices" ? i.prices : i.batches);
     } catch { /* keep what is shown; the next poll tries again */ }
   }, [view]);
   useEffect(() => {
@@ -38,8 +38,8 @@ export default function WhatsApp() {
           {l}{status?.counts?.[k] ? ` · ${status.counts[k]}` : ""}</button>)}</div></div>
       <div className="wa-list">
         {batches === null ? <div className="empty">Loading…</div>
-          : batches.length ? batches.map(b => <Batch key={b.id + b.status} b={b} onDone={done} />)
-          : <div className="empty">{view === "review" ? "Nothing to check." : "Nothing here."}</div>}
+          : batches.length ? batches.map(b => view === "prices" ? <PriceJob key={b.id + b.status} j={b} onDone={done} /> : <Batch key={b.id + b.status} b={b} onDone={done} />)
+          : <div className="empty">{view === "review" ? "Nothing to check." : view === "prices" ? "Every price message from the team has found its enquiry." : "Nothing here."}</div>}
       </div>
     </section>
   </>);
@@ -147,6 +147,40 @@ function Batch({ b, onDone }) {
       {editable && x.kind === "quote_reply" && <div className="row wa-actions">
         <span className="small muted">Looks like a reply to a quote. Open the enquiry and confirm the chosen options there.</span>
         <button className="btn ghost sm" type="button" onClick={() => act("retry")}>Read again</button></div>}
+    </article>
+  );
+}
+
+// A price message from the team the app couldn't link to an enquiry: pick it, and the prices are matched to its items.
+function PriceJob({ j, onDone }) {
+  const { enquiries, customers, toast } = useApp();
+  const [enquiryId, setEnquiryId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const name = id => customers.find(c => c.id === id)?.name || "";
+  const open = enquiries.filter(e => ["new", "quoted", "confirmed"].includes(e.status) && (!j.customerId || e.customerId === j.customerId))
+    .sort((a, z) => new Date(z.createdAt) - new Date(a.createdAt)).slice(0, 50);
+  async function act(path, body, msg) {
+    setBusy(true);
+    try { await api("POST", `/wa/prices/${j.id}/${path}`, body); toast(msg); onDone(); }
+    catch (err) { toast(err.message); } finally { setBusy(false); }
+  }
+  return (
+    <article className="wa-batch">
+      <div><b>{j.chatName || j.chat}</b> <span className="small faint">{j.senderName || j.sender.split("@")[0]} · {fmtDT(j.ts)}</span></div>
+      <div className="wa-msgs">
+        {j.quotedText && <span className="small faint">Replying to: &ldquo;{j.quotedText}&rdquo;</span>}
+        <div className="wa-text">{j.text}</div>
+      </div>
+      {j.error && <p className="small" style={{ margin: 0, color: "var(--warn)" }}>{j.error}</p>}
+      <div className="row wa-actions">
+        <select value={enquiryId} onChange={e => setEnquiryId(e.target.value)} aria-label="Enquiry" style={{ maxWidth: 420 }}>
+          <option value="">Which enquiry are these prices for?</option>
+          {open.map(e => <option key={e.id} value={e.id}>{enqNo(e)} · {name(e.customerId)} · {(e.items || []).map(i => i.part).filter(Boolean).slice(0, 3).join(", ")}</option>)}
+        </select>
+        <button className="btn primary" type="button" disabled={busy || !enquiryId} onClick={() => act("assign", { enquiryId }, "Matching the prices to its items…")}>Match prices</button>
+        <button className="btn" type="button" disabled={busy} onClick={() => act("ignore", undefined, "Set aside")}>Not prices</button>
+      </div>
+      {!open.length && <p className="small faint" style={{ margin: 0 }}>No open enquiries{j.customerId ? " for this workshop" : ""}. If the request is still in To check, create its enquiry first.</p>}
     </article>
   );
 }

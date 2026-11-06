@@ -12,6 +12,7 @@ import { transcribe, transcribeEnabled } from "./transcribe.js";
 import { createEnquiry } from "../routes/records.js";
 import { audit } from "./ingest.js";
 import { findVins, decodeVin, vinLine } from "./vin.js";
+import { processPricesDue, noteWorkshopReplies } from "./prices.js";
 
 const num = (v, d) => (v === undefined || v === "" || !Number.isFinite(Number(v)) ? d : Number(v));
 export const config = () => ({
@@ -91,8 +92,12 @@ export async function processBatch(batch) {
     await col.wa_messages.updateOne({ _id: m._id }, { $set: { transcript: m.transcript } });
   }
 
+  // Replies to a team price message ("OK", "1A 2B") are noted on that enquiry. The batch is still read
+  // as usual, in case it also asks for more parts.
+  const replied = await noteWorkshopReplies(msgs, batch._id);
+
   const customerId = await findCustomer(batch.chat, batch.chatName);
-  const set = { customerId, processedAt: iso(Date.now()) };
+  const set = { customerId, processedAt: iso(Date.now()), ...(replied.length ? { repliedTo: replied } : {}) };
 
   // 2. Read it
   if (!aiEnabled()) {
@@ -154,7 +159,8 @@ export async function processDue(now = Date.now()) {
       await audit(b._id, failed ? "failed" : "retry", "whatsapp", { error: err.message.slice(0, 300), attempts });
     }
   }
-  return handled;
+  // Then the team's price messages, now that any new enquiries exist.
+  return handled + await processPricesDue(now);
 }
 
 export function startProcessor(everyMs = 10e3) {

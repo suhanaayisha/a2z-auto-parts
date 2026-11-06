@@ -2,8 +2,9 @@
 // and the review actions. Every action is written to the wa_audit log.
 import { Router } from "express";
 import { col, out } from "../db.js";
-import { enquiryFromBatch, linkChat } from "../wa/processor.js";
+import { enquiryFromBatch, linkChat, findCustomer } from "../wa/processor.js";
 import { audit } from "../wa/ingest.js";
+import { applyPrices, dismissPrices } from "../wa/prices.js";
 
 export const wa = Router();
 
@@ -21,7 +22,10 @@ wa.get("/wa/status", async (req, res) => {
   res.json({
     running: !!fresh, connection: fresh ? s.connection : "offline", qr: fresh && s.connection !== "open" ? s.qr || null : null,
     me: s?.me || null, seenAt: s?.seenAt || null, error: s?.error || null,
-    counts: Object.fromEntries(await Promise.all(Object.entries(VIEWS).map(async ([k, v]) => [k, await col.wa_batches.countDocuments({ status: { $in: v } })]))),
+    counts: {
+      ...Object.fromEntries(await Promise.all(Object.entries(VIEWS).map(async ([k, v]) => [k, await col.wa_batches.countDocuments({ status: { $in: v } })]))),
+      prices: await col.wa_prices.countDocuments({ status: "unmatched" }),
+    },
   });
 });
 
@@ -94,4 +98,43 @@ wa.get("/wa/media/:id", async (req, res) => {
   if (!m) return res.status(404).end();
   const buf = Buffer.isBuffer(m.data) ? m.data : Buffer.from(m.data.buffer ?? m.data);
   res.set("Content-Type", m.mime || "audio/ogg").set("Cache-Control", "private, max-age=31536000, immutable").send(buf);
+});
+
+// ---------- the team's prices (see wa/prices.js) ----------
+wa.post("/wa/enquiries/:id/prices/:action", async (req, res, next) => {
+  const fn = { apply: applyPrices, dismiss: dismissPrices }[req.params.action];
+  if (!fn) return next();
+  const r = await fn(req.params.id, req.user._id);
+  if (r.error) return res.status(r.status).json({ error: r.error });
+  res.json({ enquiry: out(r.enquiry) });
+});
+
+// Price messages from the team. "unmatched" ones need someone to pick their enquiry.
+wa.get("/wa/prices", async (req, res) => {
+  const statuses = req.query.view === "all"
+    ? ["pending", "working", "suggested", "applied", "dismissed", "unmatched", "skipped", "replaced"]
+    : ["unmatched"];
+  const jobs = await col.wa_prices.find({ status: { $in: statuses } }).sort({ ts: -1 }).limit(100).toArray();
+  const customers = new Map();
+  for (const j of jobs) if (!customers.has(j.chat)) customers.set(j.chat, await findCustomer(j.chat, j.chatName));
+  res.json({ prices: jobs.map(j => Object.assign(out(j), { customerId: customers.get(j.chat) || null })) });
+});
+
+wa.post("/wa/prices/:id/assign", async (req, res) => {
+  const job = await col.wa_prices.findOne({ _id: req.params.id });
+  if (!job) return res.status(404).json({ error: "That price message is no longer here." });
+  if (!["unmatched", "not_prices", "skipped"].includes(job.status)) return res.status(400).json({ error: "This one is already matched." });
+  const e = await col.enquiries.findOne({ _id: String(req.body?.enquiryId || "") });
+  if (!e) return res.status(400).json({ error: "Choose the enquiry first." });
+  const now = new Date().toISOString();
+  await col.wa_prices.updateOne({ _id: job._id }, { $set: { status: "pending", manualEnquiryId: e._id, nextAt: now, firstAt: now, attempts: 0 } });
+  await audit(job._id, "prices_assigned", req.user._id, { enquiryId: e._id });
+  res.json({ ok: true });
+});
+
+wa.post("/wa/prices/:id/ignore", async (req, res) => {
+  const r = await col.wa_prices.updateOne({ _id: req.params.id, status: "unmatched" }, { $set: { status: "ignored", reviewedBy: req.user._id } });
+  if (!r.matchedCount) return res.status(400).json({ error: "This one can't be set aside now." });
+  await audit(req.params.id, "prices_ignored", req.user._id);
+  res.json({ ok: true });
 });

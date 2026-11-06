@@ -119,6 +119,15 @@ function Editor() {
     try { const r = await api("PUT", `/enquiries/${e.id}`, next); app.upsert("enquiries", r.enquiry); setDraft(clone(r.enquiry)); setDirty(false); toast(enqNo(r.enquiry) + " delivered"); }
     catch (err) { toast(err.message); } finally { setBusy(""); }
   }
+  async function waPrices(name) {
+    if (dirty) { toast("Save your changes first"); return; }
+    setBusy("wa-" + name);
+    try {
+      const r = await api("POST", `/wa/enquiries/${e.id}/prices/${name}`);
+      app.upsert("enquiries", r.enquiry); setDraft(clone(r.enquiry)); setDirty(false);
+      toast(name === "apply" ? (r.enquiry.quoteNo && r.enquiry.status === "quoted" ? "Prices applied. " + qtNo(r.enquiry) + " is ready." : "Prices applied") : "WhatsApp prices dismissed");
+    } catch (err) { toast(err.message); } finally { setBusy(""); }
+  }
   async function del() {
     if (isNew) { router.push("/enquiries"); return; }
     try { await api("DELETE", `/enquiries/${e.id}`); app.remove("enquiries", e.id); setDirty(false); router.push("/enquiries"); }
@@ -143,6 +152,10 @@ function Editor() {
       <div className="bd" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {L ? <div className="lockline">Fully invoiced, so prices are locked. Delivery can still be updated. To change an invoice, open it and cancel it with a credit note.</div>
           : hasLive ? <div className="lockline">Part invoiced. Invoiced items are locked; the rest can still be changed and invoiced later.</div> : null}
+        {e.waReply && ["new", "quoted"].includes(st) && <div className="banner" data-tone="info">
+          <b>{e.waReply.by || "The workshop"} replied on WhatsApp</b> ({fmtDT(e.waReply.at)}): &ldquo;{e.waReply.text}&rdquo;
+          {st === "quoted" && <> · If they accepted, tick the options they chose and press Workshop confirmed.</>}</div>}
+        {e.waPrices && !e.waPrices.applied && !e.waPrices.dismissed && !isNew && <WaPrices e={e} busy={busy} onAct={waPrices} />}
         <div className="fgrid">
           <label className="field"><span>Workshop</span>
             <select value={e.customerId} onChange={ev => setTop("customerId", ev.target.value)} disabled={L || hasLive}>
@@ -208,6 +221,41 @@ function Editor() {
       </div>
     </section>
   </>);
+}
+
+const MATCH = {
+  reply: "a reply to this request",
+  reply_to_prices: "a reply to earlier prices for this request",
+  only_open: "the only open enquiry in that group, so check it's the right one",
+  manual: "picked by hand in the WhatsApp tab",
+};
+// Prices the team sent in WhatsApp, waiting to be applied.
+function WaPrices({ e, busy, onAct }) {
+  const w = e.waPrices;
+  const byKey = new Map((e.items || []).map(it => [it.k, it]));
+  return (
+    <div className="wa-prices">
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <div><b>Prices from WhatsApp</b> <span className="small faint">sent by {w.by}, {fmtDT(w.at)} · {MATCH[w.match] || ""}</span></div>
+      </div>
+      <div className="tw"><table><thead><tr><th>Item</th><th className="r">Now</th><th className="r">From WhatsApp</th><th>Note</th></tr></thead><tbody>
+        {w.lines.map(l => {
+          const it = byKey.get(l.k), o = it ? optOf(it) || (it.options || [])[0] : null;
+          return <tr key={l.k}><td>{l.part} <span className="faint">{l.vehicle}</span></td>
+            <td className="r num">{o && n(o.sell) ? money(o.sell) : <span className="faint">–</span>}</td>
+            <td className="r num"><b>{l.price ? money(l.price) : <span className="faint">–</span>}</b></td>
+            <td>{l.note ? <span className="dchip" data-t="warn">{l.note}</span> : ""}</td></tr>;
+        })}
+      </tbody></table></div>
+      {w.extra?.length > 0 && <p className="small faint" style={{ margin: 0 }}>Not matched to an item: {w.extra.join(" · ")}</p>}
+      <details className="small"><summary className="faint">Their message</summary><div className="wa-text" style={{ marginTop: 6 }}>{w.text}</div></details>
+      <div className="row">
+        <button className="btn primary" type="button" disabled={!!busy} onClick={() => onAct("apply")}>{busy === "wa-apply" ? "Applying…" : "Apply prices"}</button>
+        <button className="btn" type="button" disabled={!!busy} onClick={() => onAct("dismiss")}>Dismiss</button>
+        <span className="small faint">Fills in the selling prices{(e.items || []).every(it => w.lines.some(l => l.k === it.k && l.price) || (it.options || []).some(o => n(o.sell))) ? " and creates the quote, since every item will have a price" : ""}. Cost prices stay for you to add.</span>
+      </div>
+    </div>
+  );
 }
 
 function ItemCard({ it, i, e, locked, iq, setItem, setOpt, change }) {

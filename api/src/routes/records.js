@@ -17,19 +17,20 @@ const viewInvoice = (req, x) => out(x);
 
 // ---------- everything the screens need in one call ----------
 records.get("/bootstrap", async (req, res) => {
-  const [company, customers, enquiries, invoices, credits, waReview] = await Promise.all([
+  const [company, customers, enquiries, invoices, credits, waReview, waPricesUnmatched] = await Promise.all([
     col.settings.findOne({ _id: "company" }),
     col.customers.find({}).toArray(),
     col.enquiries.find({}).toArray(),
     col.invoices.find({}).toArray(),
     col.credits.find({}).toArray(),
     col.wa_batches.countDocuments({ status: { $in: ["review", "failed"] } }),
+    col.wa_prices.countDocuments({ status: "unmatched" }),
   ]);
   const co = out(company) || { name: "", salespeople: [], quoteValidDays: 7, payDays: 0 };
   res.json({
     me: { id: req.user._id, name: req.user.name, email: req.user.email },
     config: { ai: !!process.env.ANTHROPIC_API_KEY },
-    waReview,
+    waReview: waReview + waPricesUnmatched,
     company: co,
     customers: customers.map(out),
     enquiries: enquiries.map(e => viewEnquiry(req, e)),
